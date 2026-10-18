@@ -1,0 +1,6 @@
+{
+  // Konfigurasi Cloudflare Workers (static assets) – hanya index.html yang dipublikasikan
+  "name": "brawijaya-dashboard",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./dist", "not_found_handling": "single-page-application" }
+}

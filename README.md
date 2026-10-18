@@ -54,3 +54,16 @@ Pembatasan akses ditegakkan di database (RLS), bukan hanya di tampilan.
 ## Integrasi SIMRS
 
 Format kiriman JSON baku tersedia di menu **Integrasi SIMRS** (Superadmin). Middleware SIMRS dapat menulis ke tabel `patients` (kunci: kode RS + No. Registrasi) memakai kredensial server, bukan dari browser.
+
+## Cloudflare (alternatif hosting tanpa nama akun GitHub)
+
+Workers & Pages → Create → Import a repository → pilih repo ini, lalu:
+
+| Kolom | Isi |
+|---|---|
+| Project name | `brawijaya-dashboard` (harus sama dengan `name` di `wrangler.jsonc`) |
+| Build command | `mkdir -p dist && cp index.html dist/` |
+| Deploy command | `npx wrangler deploy` |
+| Non-production branch deploy (preview) command | `npx wrangler versions upload` |
+
+Setelah tayang, perbarui Site URL di Supabase (Authentication → URL Configuration).
