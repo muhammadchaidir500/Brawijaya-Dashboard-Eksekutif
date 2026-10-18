@@ -411,7 +411,7 @@ const MASTER_BUILTIN=[
   {k:"los_standar",l:"LOS Standar (hari)",t:"number",req:1},{k:"plafon_total",l:"Plafon Total (Rp)",t:"money",req:1},
   ...KATEGORI.map(c=>({k:KAT_KEY(c),l:"Plafon "+c,t:"money"})),
   {k:"item_cp",l:"Item Clinical Pathway",t:"textarea",full:1,hint:"Format: KODE:qty@harga; pakai akhiran d untuk item per hari. Contoh: VIS-SP:4d@175000; LAB-DL:2@120000"},
-  {k:"sumber",l:"Sumber Standar",t:"select",opt:["Clinical Pathway","Evidence Based Practice","Kontrak Penjamin","iDRG / INA-CBG"]},
+  {k:"sumber",l:"Sumber Standar",t:"select",opt:["Clinical Pathway","Estimasi Biaya Perawatan (EBP)","Kontrak Penjamin","iDRG / INA-CBG"]},
   {k:"hospitalId",l:"Berlaku untuk",t:"rs",allowAll:1,req:1}]}
 ];
 
@@ -708,7 +708,7 @@ function brandHTML(){const logo=DATA.settings.logo||LOGO_MARK;return `<div class
 const AUTH_FEATS=[["dash","Dashboard korporat","Selisih billing vs pagu lintas RS, DPJP dan diagnosa"],["pt","Analisa per pasien","LOS, utilisasi, item di luar Clinical Pathway"],["db","Master data fleksibel","Unggah Excel, CSV, PDF, Word dan lainnya"],["plug","Siap SIMRS","Format data baku untuk tiap rumah sakit"]];
 function authArt(title,lead){return `<div class="auth-deco" aria-hidden="true"><span class="ring" style="width:520px;height:520px;left:-200px;top:-220px"></span><span class="ring" style="width:340px;height:340px;left:-110px;top:-130px"></span><span class="ring" style="width:600px;height:600px;right:-260px;bottom:-300px"></span><img class="wm l" src="${LOGO_MARK}" alt=""><img class="wm r" src="${LOGO_MARK}" alt=""></div>
  <div class="auth-wrap"><header class="auth-head"><div class="eyebrow">${esc(orgName())} · Pusat Kendali Biaya Pelayanan</div><h1>${title}</h1><p>${lead}</p></header>`}
-const authFeats=()=>`<ul class="auth-feats">${AUTH_FEATS.map(f=>`<li><span class="i">${ic(f[0],18)}</span><b>${f[1]}</b><span>${f[2]}</span></li>`).join("")}</ul><div class="auth-foot">${esc(DATA.settings.appName||"Pantau Biaya")} · Monitoring Biaya Pelayanan terhadap Pagu Clinical Pathway &amp; EBP</div>`;
+const authFeats=()=>`<ul class="auth-feats">${AUTH_FEATS.map(f=>`<li><span class="i">${ic(f[0],18)}</span><b>${f[1]}</b><span>${f[2]}</span></li>`).join("")}</ul><div class="auth-foot">${esc(DATA.settings.appName||"Pantau Biaya")} · Monitoring Biaya Pelayanan terhadap Pagu Clinical Pathway &amp; Estimasi Biaya Perawatan (EBP)</div>`;
 const authLogo=()=>`<div class="auth-logo-wrap"><img class="auth-logo" src="${DATA.settings.loginLogo||LOGO_FULL}" alt="${esc(orgName())}"></div>`;
 const FEATS=[["dash","Dashboard selisih billing vs pagu lintas 5 RS, per DPJP, diagnosa dan item tarif"],["pt","Analisa per pasien: LOS, utilisasi, item di luar Clinical Pathway, selisih harga"],["db","Master data dengan unggah Excel, CSV, PDF, Word, Markdown, JSON"],["plug","Struktur data siap dihubungkan ke SIMRS tiap rumah sakit"]];
 function renderSetup(root){
@@ -721,7 +721,7 @@ function renderSetup(root){
     <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><input type="checkbox" id="su-demo" checked style="margin-top:3px"> <span>Isi dengan <b>data contoh</b>: 5 RS, 180 pasien, tarif, ICD, dokter dan pagu CP. Bisa dihapus kapan saja dari menu Daftar RS.</span></label>
     <button class="btn pri">${ic("check")} Buat akun & mulai</button>
     <div class="hint">Data disimpan di server Supabase. Halaman penyiapan ini hanya muncul sekali, sebelum Superadmin pertama dibuat.</div>`
-    :`<h2>Belum disiapkan</h2><p class="hint" style="font-size:13.5px">Pemilik halaman ini belum membuat akun Superadmin. Hubungi tim korporat untuk mendapatkan akun.</p>`}</form><div class="auth-foot">${esc(DATA.settings.appName||"Pantau Biaya")} · Monitoring Biaya Pelayanan terhadap Pagu Clinical Pathway &amp; EBP</div></div></div>`;
+    :`<h2>Belum disiapkan</h2><p class="hint" style="font-size:13.5px">Pemilik halaman ini belum membuat akun Superadmin. Hubungi tim korporat untuk mendapatkan akun.</p>`}</form><div class="auth-foot">${esc(DATA.settings.appName||"Pantau Biaya")} · Monitoring Biaya Pelayanan terhadap Pagu Clinical Pathway &amp; Estimasi Biaya Perawatan (EBP)</div></div></div>`;
   const f=$("#setup");if(!owner)return;
   f.onsubmit=async e=>{e.preventDefault();const btn=$("button",f);btn.disabled=true;btn.textContent="Menyiapkan data…";
     try{const un=$("#su-user").value.trim().toLowerCase(),pw=$("#su-pwd").value,nama=$("#su-nama").value.trim(),demo=$("#su-demo").checked;
@@ -735,7 +735,7 @@ function renderSetup(root){
       await audit("Penyiapan awal","Akun superadmin dibuat"+(demo?" + data contoh":""));DATA=await Store.loadAll();S.user=DATA.users.find(x=>x.username===un);invalidate();render();toast("Sistem siap digunakan")}
     catch(err){console.error(err);btn.disabled=false;btn.textContent="Coba lagi";toast("Gagal menyimpan: "+(err.message||err.code||err),"err")}}}
 function renderLogin(root){
-  root.innerHTML=`<div class="auth">${authArt("Kendali biaya pelayanan seluruh rumah sakit dalam satu layar","Pantau billing setiap pasien terhadap pagu Clinical Pathway dan Evidence Based Practice, temukan penyebab selisih lebih awal, dan ambil keputusan bersama direksi.")}
+  root.innerHTML=`<div class="auth">${authArt("Kendali biaya pelayanan seluruh rumah sakit dalam satu layar","Pantau billing setiap pasien terhadap pagu Clinical Pathway dan Estimasi Biaya Perawatan (EBP), temukan penyebab selisih lebih awal, dan ambil keputusan bersama direksi.")}
   <form class="auth-card" id="login" novalidate>${authLogo()}
    <div><h2>Selamat datang</h2><p class="sub">Masuk dengan akun yang diberikan tim korporat</p></div>
    <div class="field"><label for="lg-user">Username</label><div class="inp-ic">${ic("users",16)}<input id="lg-user" class="inp" autocomplete="username" required placeholder="mis. dir.bdg"></div></div>
@@ -744,7 +744,7 @@ function renderLogin(root){
    <div id="lg-err" class="hint" role="alert" style="color:var(--bad);font-size:12.5px;text-align:center"></div>
    <button class="btn pri" id="lg-go" type="submit">Masuk</button>
    <div class="auth-meta"><span>Lupa password? Hubungi Superadmin Korporat.</span></div>
-  </form><div class="auth-foot">${esc(DATA.settings.appName||"Pantau Biaya")} · Monitoring Biaya Pelayanan terhadap Pagu Clinical Pathway &amp; EBP</div></div></div>`;
+  </form><div class="auth-foot">${esc(DATA.settings.appName||"Pantau Biaya")} · Monitoring Biaya Pelayanan terhadap Pagu Clinical Pathway &amp; Estimasi Biaya Perawatan (EBP)</div></div></div>`;
   $("#lg-show").onchange=e=>{$("#lg-pwd").type=e.target.checked?"text":"password"};
   $("#login").onsubmit=async e=>{e.preventDefault();const un=$("#lg-user").value.trim().toLowerCase();const btn=$("#lg-go");btn.disabled=true;btn.textContent="Memeriksa…";
     const {data,error}=await sb.auth.signInWithPassword({email:emailOf(un),password:$("#lg-pwd").value});
