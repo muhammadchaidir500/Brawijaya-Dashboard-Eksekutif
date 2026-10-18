@@ -1,6 +1,6 @@
 # Catatan pengembangan – Brawijaya Dashboard Eksekutif
 
-Pemilik: dr. (Superadmin Korporat), komunikasi dalam Bahasa Indonesia. Perubahan di `main` langsung tayang via GitHub Pages.
+Pemilik: dr. (Superadmin Korporat), komunikasi dalam Bahasa Indonesia. Perubahan di `main` otomatis tayang di https://brawijaya-dashboard.hospitalicp.workers.dev/ (Cloudflare Workers Builds, konfigurasi `wrangler.jsonc`, build menyalin index.html ke dist/).
 
 ## Arsitektur `index.html`
 Satu berkas HTML (CSS + JS inline, tanpa build). Pustaka dari CDN: supabase-js 2.45.4 (jsDelivr), Chart.js 4.4.1; dimuat saat perlu: SheetJS 0.18.5, mammoth 1.6.0, pdf.js 3.11.174, jsPDF 2.5.1 + autotable 3.8.2.
@@ -28,4 +28,4 @@ Warna merek dari logo: ungu `#906DB1`, abu `#A8A9AD`, teks abu `#6D6E73`. Sideba
 ## Alur perubahan
 1. Edit `index.html` (dan migrasi/fungsi bila perlu).
 2. Uji sintaks: ekstrak `<script>` terakhir → `node --check`.
-3. Commit & push ke `main` → GitHub Pages tayang ±1 menit.
+3. Commit & push ke `main` → Cloudflare build & tayang ±1 menit.

@@ -2,7 +2,8 @@
 
 Pusat kendali biaya pelayanan seluruh rumah sakit grup Brawijaya Hospital. Aplikasi membandingkan billing tiap pasien dengan pagu Clinical Pathway / Evidence Based Practice, lalu menelusuri penyebab selisih (LOS, utilisasi, item di luar CP, selisih harga) sampai ke item tarif.
 
-- **Website:** `index.html` (satu berkas, tanpa build) – ditayangkan lewat GitHub Pages
+- **Website (produksi):** https://brawijaya-dashboard.hospitalicp.workers.dev/ – Cloudflare Workers, otomatis deploy dari `main`
+- **Kode:** `index.html` (satu berkas, tanpa build)
 - **Backend:** Supabase, proyek `pantau-biaya-korporat` (ref `acwausnccjmlyfdmmgfo`, region Singapura)
 
 ## Struktur repo
