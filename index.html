@@ -71,6 +71,8 @@ a{color:var(--copper-strong)}
 .inp-ic .inp{padding:11px 12px 11px 38px;border-radius:10px;background:var(--surface-2)}
 .inp-ic .inp:focus{background:var(--surface)}
 .auth-card .btn.pri{justify-content:center;padding:12px;border-radius:10px;font-size:14px}
+.auth-link{color:var(--copper-strong);font-weight:600;text-decoration:none;font-size:13px}
+.auth-link:hover{text-decoration:underline}
 .auth-meta{display:grid;gap:4px;text-align:center;font-size:12px;color:var(--faint)}
 .auth-feats{list-style:none;margin:0;padding:0;width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .auth-feats li{display:grid;gap:8px;justify-items:center;text-align:center;font-size:12.5px;line-height:1.45;color:#EDE6F6;padding:14px 12px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12)}
@@ -444,6 +446,7 @@ const Store={mode:"cloud",initialized:false,
   D.patients=pt.map(p=>({...p.data,id:p.id,hospitalId:p.hospital_id}));
   const br=st.find(x=>x.id==="branding"),si=st.find(x=>x.id==="simrs");D.settings=Object.assign({},br?br.data:await this.branding(),{simrs:(si&&si.data.simrs)||{}});
   const me=D.users.find(u=>u.id===session.user.id);
+  if(me&&me.role==="superadmin"){try{D.pwreq=ok(await sb.from("password_requests").select("*").eq("status","baru").order("created_at",{ascending:false}).limit(200))}catch(e){D.pwreq=[]}}
   if(me&&me.role==="superadmin"){const a=ok(await sb.from("audit_log").select("*").order("t",{ascending:false}).limit(600));D.audit=a.map(x=>({t:x.t,u:x.username,action:x.action,detail:x.detail}))}
   return D},
  async sync(table,list,map){const ids=new Set(list.map(x=>x.id));for(const c of chunk(list.map(map),500))ok(await sb.from(table).upsert(c));
@@ -699,7 +702,7 @@ async function boot(){
   try{await Store.init();DATA=await Store.loadAll()}catch(e){console.error(e);$("#root").innerHTML=`<div class="boot"><div class="card card-b" style="max-width:460px;display:grid;gap:10px"><h3>Tidak dapat terhubung ke server</h3><p class="hint" style="margin:0">${esc(e.message||e)}. Periksa koneksi internet lalu muat ulang.</p><button class="btn pri" onclick="location.reload()">Muat ulang</button></div></div>`;return}
   const {data:{session}}=await sb.auth.getSession();
   if(session){const u=DATA.users.find(x=>x.id===session.user.id);if(u&&u.aktif!==false)S.user=u;else{await sb.auth.signOut();DATA=await Store.loadAll()}}
-  render()}
+  render();notifyReq()}
 function render(){destroyCharts();const root=$("#root");
   if(!Store.initialized)return renderSetup(root);
   if(!S.user)return renderLogin(root);
@@ -735,25 +738,41 @@ function renderSetup(root){
         btn.textContent="Membuat akun direktur contoh…";for(const h of g.hospitals){try{await adminFn({action:"create",username:"dir."+h.kode.slice(4).toLowerCase(),password:"rs12345",nama:"Direktur "+h.nama,role:"rs",hospital_id:h.id})}catch(e){console.warn(e)}}}
       await audit("Penyiapan awal","Akun superadmin dibuat"+(demo?" + data contoh":""));DATA=await Store.loadAll();S.user=DATA.users.find(x=>x.username===un);invalidate();render();toast("Sistem siap digunakan")}
     catch(err){console.error(err);btn.disabled=false;btn.textContent="Coba lagi";toast("Gagal menyimpan: "+(err.message||err.code||err),"err")}}}
+function forgotDialog(un){const o=openModal({title:"Lupa password",size:"sm",
+  body:`<p style="margin:0;font-size:13.5px;color:var(--muted)">Kirim permintaan atur ulang password. Superadmin akan membuatkan password baru dan menyerahkannya kepada Anda.</p>
+  <div class="field"><label for="fp-user">Username <span class="req">*</span></label><input id="fp-user" class="inp" value="${esc(un||"")}" autocomplete="username" maxlength="64"></div>
+  <div class="field"><label for="fp-kontak">Nomor HP / WhatsApp <span class="req">*</span></label><input id="fp-kontak" class="inp" inputmode="tel" maxlength="120" placeholder="mis. 0812xxxxxxx"></div>
+  <div class="field"><label for="fp-cat">Keterangan (opsional)</label><textarea id="fp-cat" class="inp" maxlength="300" placeholder="mis. nama dan rumah sakit"></textarea></div>
+  <div id="fp-err" class="hint" style="color:var(--bad)"></div>`,
+  foot:`<button class="btn" data-close>Batal</button><button class="btn pri" id="fp-go">Kirim permintaan</button>`});
+  $("#fp-go",o).onclick=async()=>{const u=$("#fp-user",o).value.trim().toLowerCase(),k=$("#fp-kontak",o).value.trim(),c=$("#fp-cat",o).value.trim();
+    if(!u||!k){$("#fp-err",o).textContent="Isi username dan nomor yang bisa dihubungi.";return}
+    const b=$("#fp-go",o);b.disabled=true;b.textContent="Mengirim…";
+    const r=await sb.from("password_requests").insert({username:u,kontak:k,catatan:c});
+    if(r.error){b.disabled=false;b.textContent="Kirim permintaan";$("#fp-err",o).textContent="Permintaan gagal terkirim. Periksa koneksi lalu coba lagi.";return}
+    $(".modal-b",o).innerHTML=`<div style="display:grid;gap:10px;justify-items:center;text-align:center;padding:8px 0"><span style="width:44px;height:44px;border-radius:50%;background:var(--good-soft);color:var(--good);display:grid;place-items:center">${ic("check",22)}</span><b>Permintaan terkirim</b><p style="margin:0;color:var(--muted);font-size:13.5px">Superadmin akan menghubungi Anda di nomor yang dicantumkan setelah password diatur ulang.</p></div>`;
+    $(".modal-f",o).innerHTML=`<button class="btn pri" data-close>Tutup</button>`;$$("[data-close]",o).forEach(x=>x.onclick=()=>closeModal(o))}}
 function renderLogin(root){
   root.innerHTML=`<div class="auth">${authArt("Kendali biaya pelayanan seluruh rumah sakit dalam satu layar","Pantau billing setiap pasien terhadap pagu Clinical Pathway dan Estimasi Biaya Perawatan (EBP), temukan penyebab selisih lebih awal, dan ambil keputusan bersama direksi.")}
   <form class="auth-card" id="login" novalidate>${authLogo()}
-   <div><h2>Selamat datang</h2><p class="sub">Masuk dengan akun yang diberikan tim korporat</p></div>
+   <div><h2>Selamat datang</h2></div>
    <div class="field"><label for="lg-user">Username</label><div class="inp-ic">${ic("users",16)}<input id="lg-user" class="inp" autocomplete="username" required placeholder="mis. dir.bdg"></div></div>
    <div class="field"><label for="lg-pwd">Password</label><div class="inp-ic">${ic("key",16)}<input id="lg-pwd" class="inp" type="password" autocomplete="current-password" required placeholder="••••••••"></div></div>
    <label style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted)"><input type="checkbox" id="lg-show"> Tampilkan password</label>
    <div id="lg-err" class="hint" role="alert" style="color:var(--bad);font-size:12.5px;text-align:center"></div>
    <button class="btn pri" id="lg-go" type="submit">Masuk</button>
-   <div class="auth-meta"><span>Lupa password? Hubungi Superadmin Korporat.</span></div>
+   <div class="auth-meta"><a href="#" id="lg-forgot" class="auth-link">Lupa password?</a></div>
   </form><div class="auth-foot">${esc(DATA.settings.appName||"Pantau Biaya")} · Monitoring Biaya Pelayanan terhadap Pagu Clinical Pathway &amp; Estimasi Biaya Perawatan (EBP)</div></div></div>`;
   $("#lg-show").onchange=e=>{$("#lg-pwd").type=e.target.checked?"text":"password"};
+  $("#lg-forgot").onclick=e=>{e.preventDefault();forgotDialog($("#lg-user").value.trim())};
   $("#login").onsubmit=async e=>{e.preventDefault();const un=$("#lg-user").value.trim().toLowerCase();const btn=$("#lg-go");btn.disabled=true;btn.textContent="Memeriksa…";
     const {data,error}=await sb.auth.signInWithPassword({email:emailOf(un),password:$("#lg-pwd").value});
     if(error){btn.disabled=false;btn.textContent="Masuk";$("#lg-err").textContent="Username atau password salah.";return}
     try{DATA=await Store.loadAll()}catch(err){btn.disabled=false;btn.textContent="Masuk";$("#lg-err").textContent="Gagal memuat data: "+(err.message||err);return}
     const u=DATA.users.find(x=>x.id===data.user.id);
     if(!u||u.aktif===false){await sb.auth.signOut();DATA=await Store.loadAll();btn.disabled=false;btn.textContent="Masuk";$("#lg-err").textContent="Akun nonaktif atau belum terdaftar. Hubungi Superadmin.";return}
-    S.user=u;u.lastLogin=new Date().toISOString();S.view="dashboard";S.tabs=[];S.active="main";if(!isSA())S.f.rs="";invalidate();render();Store.saveDoc("users").catch(()=>{});audit("Login","")}}
+    S.user=u;u.lastLogin=new Date().toISOString();S.view="dashboard";S.tabs=[];S.active="main";if(!isSA())S.f.rs="";invalidate();render();notifyReq();Store.saveDoc("users").catch(()=>{});audit("Login","")}}
+function notifyReq(){const n=(DATA.pwreq||[]).length;if(isSA()&&n)toast(n+" permintaan lupa password menunggu. Buka Master Data → Pengaturan Akun.")}
 
 /* ---------------- SHELL ---------------- */
 const NAV=()=>[
@@ -1156,6 +1175,7 @@ async function importBilling(recs,replace){const by=groupBy(recs,r=>r.noReg);con
 function viewAccounts(c){
   const list=isSA()?DATA.users:DATA.users.filter(u=>u.id===S.user.id);
   c.innerHTML=`<div class="page-head"><div><h2>Pengaturan Akun</h2><p>${isSA()?"Kelola seluruh akun korporat dan akun rumah sakit. Akun RS otomatis hanya melihat data RS-nya.":"Ubah password akun Anda."}</p></div><div class="grow"></div>${isSA()?`<button class="btn pri" data-act="uadd">${ic("plus",16)} Tambah akun</button>`:""}</div>
+  ${isSA()&&(DATA.pwreq||[]).length?`<div class="card"><div class="card-h"><h3>Permintaan lupa password</h3><span class="pill warn">${DATA.pwreq.length} menunggu</span></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Waktu</th><th>Username</th><th>Akun</th><th>Kontak</th><th>Keterangan</th><th></th></tr></thead><tbody>${DATA.pwreq.map(r=>{const u=DATA.users.find(x=>x.username===r.username);return `<tr><td class="muted">${new Date(r.created_at).toLocaleString("id-ID")}</td><td class="mono">${esc(r.username)}</td><td>${u?esc(u.nama)+`<div class="muted">${u.hospitalId?esc(hName(u.hospitalId)):"Korporat"}</div>`:`<span class="pill bad">Tidak terdaftar</span>`}</td><td class="mono">${esc(r.kontak)}</td><td>${esc(r.catatan||"–")}</td><td style="white-space:nowrap;text-align:right">${u?`<button class="btn sm pri" data-act="ureset" data-v="${u.id}" data-req="${r.id}">${ic("key",14)} Atur ulang</button> `:""}<button class="btn sm" data-act="reqdone" data-v="${r.id}">Tandai selesai</button></td></tr>`}).join("")}</tbody></table></div></div>`:""}
   <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Nama</th><th>Username</th><th>Peran</th><th>Rumah sakit</th><th>Status</th><th>Login terakhir</th><th></th></tr></thead><tbody>
   ${list.map(u=>`<tr><td><b>${esc(u.nama)}</b></td><td class="mono">${esc(u.username)}</td><td><span class="pill ${u.role==="superadmin"?"copper":u.role==="rs"?"info":"neutral"}">${esc(ROLES[u.role])}</span></td><td>${u.hospitalId?esc(hName(u.hospitalId)):"Seluruh RS"}</td><td>${u.aktif===false?`<span class="pill bad">Nonaktif</span>`:`<span class="pill good">Aktif</span>`}</td><td class="muted">${u.lastLogin?new Date(u.lastLogin).toLocaleString("id-ID"):"–"}</td>
    <td style="white-space:nowrap;text-align:right">${isSA()?`<button class="btn sm" data-act="uedit" data-v="${u.id}">${ic("edit",14)} Ubah</button> <button class="btn sm" data-act="ureset" data-v="${u.id}">${ic("key",14)} Atur ulang password</button>${u.id!==S.user.id?` <button class="btn sm icon danger" data-act="udel" data-v="${u.id}" aria-label="Hapus akun">${ic("trash",14)}</button>`:""}`:`<button class="btn sm" data-act="uself">${ic("key",14)} Ganti password</button>`}</td></tr>`).join("")}</tbody></table></div></div>
@@ -1165,7 +1185,9 @@ function viewAccounts(c){
    <div class="btns" style="margin-top:12px">${DATA.settings.logo?`<img src="${DATA.settings.logo}" alt="Logo saat ini" style="height:40px;border-radius:6px;border:1px solid var(--line);background:#fff">`:""}<button class="btn pri" data-act="stsave">${ic("check",15)} Simpan identitas</button>${DATA.settings.logo?`<button class="btn sm danger" data-act="stlogo0">Hapus logo</button>`:""}</div></div></div>`:""}`;
   ACT.uadd=()=>userForm();ACT.uedit=b=>userForm(DATA.users.find(u=>u.id===b.dataset.v));
   ACT.ureset=async b=>{const u=DATA.users.find(x=>x.id===b.dataset.v);if(!(await confirmPwd("mengatur ulang password "+u.username)))return;const np=genPwd();try{await adminFn({action:"reset_password",id:u.id,password:np})}catch(e){toast(e.message,"err");return}await audit("Atur ulang password",u.username);
+    if(b.dataset.req){await sb.from("password_requests").update({status:"selesai"}).eq("id",+b.dataset.req);DATA.pwreq=(DATA.pwreq||[]).filter(x=>String(x.id)!==b.dataset.req);render()}
     openModal({title:"Password baru",size:"sm",body:`<p style="margin:0">Password baru untuk <b>${esc(u.username)}</b>. Salin sekarang, password ini hanya ditampilkan sekali.</p><div class="pwd-reveal" id="np-val">${esc(np)}</div><button class="btn" data-act="copy" data-src="#np-val">${ic("copy",15)} Salin password</button>`,foot:`<button class="btn pri" data-close>Selesai</button>`})};
+  ACT.reqdone=async b=>{const r=await sb.from("password_requests").update({status:"selesai"}).eq("id",+b.dataset.v);if(r.error){toast("Gagal: "+r.error.message,"err");return}DATA.pwreq=(DATA.pwreq||[]).filter(x=>String(x.id)!==b.dataset.v);render();toast("Permintaan ditandai selesai")};
   ACT.udel=async b=>{const u=DATA.users.find(x=>x.id===b.dataset.v);if(!(await confirmPwd("menghapus akun "+u.username)))return;try{await adminFn({action:"delete",id:u.id})}catch(e){toast(e.message,"err");return}DATA.users=DATA.users.filter(x=>x.id!==u.id);await audit("Hapus akun",u.username);render();toast("Akun dihapus")};
   ACT.uself=()=>{const o=openModal({title:"Ganti password",size:"sm",body:`<div class="field"><label for="ps-old">Password lama</label><input id="ps-old" type="password" class="inp" autocomplete="current-password"></div><div class="field"><label for="ps-new">Password baru (min. 6 karakter)</label><input id="ps-new" type="password" class="inp" autocomplete="new-password"></div><div class="field"><label for="ps-new2">Ulangi password baru</label><input id="ps-new2" type="password" class="inp" autocomplete="new-password"></div>`,foot:`<button class="btn" data-close>Batal</button><button class="btn pri" id="ps-save">Simpan</button>`});
     $("#ps-save",o).onclick=async()=>{if(!(await verifyPwd($("#ps-old",o).value))){toast("Password lama tidak sesuai.","err");return}const n=$("#ps-new",o).value;if(n.length<6||n!==$("#ps-new2",o).value){toast("Password baru minimal 6 karakter dan kedua isian harus sama.","err");return}const r=await sb.auth.updateUser({password:n});if(r.error){toast("Gagal mengganti password: "+r.error.message,"err");return}await audit("Ganti password sendiri","");closeModal(o);toast("Password diganti")}};

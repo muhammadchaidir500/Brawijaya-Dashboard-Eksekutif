@@ -15,7 +15,7 @@ Lapisan di dalam `<script>` (urut):
 Pola keamanan UI: setiap simpan/ubah/hapus memanggil `confirmPwd()`.
 
 ## Database (Supabase, ref acwausnccjmlyfdmmgfo)
-Tabel: `profiles`, `hospitals`, `master_types`, `master_rows(type, hospital_id, data jsonb)`, `patients(hospital_id, data jsonb)`, `settings` ('branding' publik, 'simrs'), `audit_log`.
+Tabel: `profiles`, `password_requests` (antrean lupa password, anon boleh insert), `hospitals`, `master_types`, `master_rows(type, hospital_id, data jsonb)`, `patients(hospital_id, data jsonb)`, `settings` ('branding' publik, 'simrs'), `audit_log`.
 RLS memakai `private.pb_role()`, `private.pb_hosp()`, `private.pb_is_sa()`. `public.pb_is_initialized()` terbuka untuk anon.
 Skema lengkap: `supabase/migrations/`. Perubahan skema baru → file migrasi baru, terapkan lewat Supabase MCP, lalu commit file-nya.
 
