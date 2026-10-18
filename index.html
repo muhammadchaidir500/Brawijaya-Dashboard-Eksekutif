@@ -36,6 +36,7 @@
   --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.3); color-scheme:dark}
 *{box-sizing:border-box}
 html,body{height:100%}
+#root{min-height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 h1,h2,h3,h4{margin:0;line-height:1.25;text-wrap:balance;letter-spacing:-.01em}
@@ -46,7 +47,7 @@ a{color:var(--copper-strong)}
 
 /* ---------- boot / login ---------- */
 .boot{min-height:100%;display:grid;place-items:center;padding-block:40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.auth{position:relative;min-height:100%;overflow:hidden;color:#fff;background:radial-gradient(ellipse at 50% -10%,#A889C9 0%,rgba(168,137,201,0) 55%),linear-gradient(160deg,#2A1D40 0%,#45306A 45%,#6E4E95 100%);display:flex;justify-content:center;align-items:center;padding-block:clamp(24px,5vh,56px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.auth{position:relative;min-height:100vh;min-height:100dvh;overflow:hidden;color:#fff;background:radial-gradient(ellipse at 50% -10%,#A889C9 0%,rgba(168,137,201,0) 55%),linear-gradient(160deg,#2A1D40 0%,#45306A 45%,#6E4E95 100%);display:flex;justify-content:center;align-items:center;padding-block:clamp(24px,5vh,56px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .auth-deco{position:absolute;inset:0;pointer-events:none}
 .auth-deco .wm{position:absolute;width:min(46vw,520px);opacity:.07;filter:brightness(0) invert(1)}
 .auth-deco .wm.l{left:-8%;bottom:-12%}
