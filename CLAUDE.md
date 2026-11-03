@@ -29,3 +29,6 @@ Warna merek dari logo: ungu `#906DB1`, abu `#A8A9AD`, teks abu `#6D6E73`. Sideba
 1. Edit `index.html` (dan migrasi/fungsi bila perlu).
 2. Uji sintaks: ekstrak `<script>` terakhir → `node --check`.
 3. Commit & push ke `main` → Cloudflare build & tayang ±1 menit.
+
+## Subfolder `rs-tangerang/` (proyek terpisah)
+Dashboard Direktur RS Brawijaya Tangerang berbasis Google Apps Script + Google Drive. `rs-tangerang/Index.html` diambil langsung oleh Apps Script dari raw.githubusercontent.com (tidak ikut build Cloudflare). Uji sintaks JS sebelum push; pertahankan penanda `BWT-DASH-v1`. Lihat `rs-tangerang/README.md`.
