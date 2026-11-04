@@ -187,6 +187,7 @@ label.field{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-wei
 .kpi.clickable:hover::after{opacity:1}
 .kc-1{--kc:var(--c1);--kbg:var(--c1s)}.kc-2{--kc:var(--c2);--kbg:var(--c2s)}.kc-3{--kc:var(--c3);--kbg:var(--c3s)}.kc-4{--kc:var(--c4);--kbg:var(--c4s)}
 .kc-5{--kc:var(--c5);--kbg:var(--c5s)}.kc-6{--kc:var(--c6);--kbg:var(--c6s)}.kc-7{--kc:var(--c7);--kbg:var(--c7s)}.kc-8{--kc:var(--c8);--kbg:var(--c8s)}
+.kpi.st-bad .kpi-v{color:var(--bad)}.kpi.st-ok .kpi-v{color:var(--ok)}
 .delta{font-weight:700;font-variant-numeric:tabular-nums}
 .delta.up{color:var(--ok)}.delta.down{color:var(--bad)}
 
@@ -366,10 +367,11 @@ code{font-family:var(--font-data);background:var(--surface-2);padding:1px 5px;bo
         <div class="ph-r"><a class="btn" id="rkFolder" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>Buka folder</a><button class="btn primary" onclick="bukaUnit('Farmasi')">Dashboard Farmasi</button></div></div>
       <div class="facts" id="rkFacts"></div>
       <div class="sec"><div class="sec-h"><div class="sec-t"><span class="kicker">Bagian 1</span><h3>Farmasi — penjualan obat &amp; alkes</h3><p class="sec-sub">Klik kartu untuk melihat rinciannya</p></div></div><div class="panel-b"><div class="kpis" id="rkKpi"></div></div></div>
-      <div class="sec"><div class="sec-h"><div class="sec-t"><span class="kicker">Bagian 2</span><h3>Tren &amp; yang perlu diperhatikan</h3><p class="sec-sub">Dibuat otomatis dari data terbaru</p></div></div>
+      <div class="sec" id="rkCmxSec"><div class="sec-h"><div class="sec-t"><span class="kicker">Bagian 2</span><h3>Casemix — klaim INA-CBG</h3><p class="sec-sub" id="rkCmxSub">Dari file E-Klaim di folder Casemix</p></div><div class="right"><button class="btn sm" onclick="bukaUnit('Casemix')">Dashboard Casemix ›</button></div></div><div class="panel-b"><div class="kpis" id="rkCmx"></div><ul class="insights" id="rkCmxIns" style="margin-top:12px"></ul></div></div>
+      <div class="sec"><div class="sec-h"><div class="sec-t"><span class="kicker">Bagian 3</span><h3>Tren Farmasi &amp; yang perlu diperhatikan</h3><p class="sec-sub">Dibuat otomatis dari data terbaru</p></div></div>
         <div class="panel-b"><div class="cgrid"><div class="chart-card"><div class="cc-h"><h4>Penjualan per bulan</h4><span class="cc-sub">Per kelompok penjamin</span></div><div class="legend" id="rkTrendLg"></div><div class="chart" id="rkTrend"></div></div>
           <div class="chart-card"><div class="cc-h"><h4>Yang perlu diperhatikan</h4><span class="cc-sub">Temuan otomatis</span></div><ul class="insights" id="rkIns"></ul></div></div></div></div>
-      <div class="sec"><div class="sec-h"><div class="sec-t"><span class="kicker">Bagian 3</span><h3>Laporan unit</h3><p class="sec-sub">File di folder Google Drive dan status pemrosesannya</p></div></div><div class="panel-b"><div class="ucards" id="rkUnit"></div></div></div>
+      <div class="sec"><div class="sec-h"><div class="sec-t"><span class="kicker">Bagian 4</span><h3>Laporan unit</h3><p class="sec-sub">File di folder Google Drive dan status pemrosesannya</p></div></div><div class="panel-b"><div class="ucards" id="rkUnit"></div></div></div>
     </section>
 
     <!-- ============ LAPORAN (Farmasi / unit lain) ============ -->
@@ -439,6 +441,58 @@ code{font-family:var(--font-data);background:var(--surface-2);padding:1px 5px;bo
           <div class="sec"><div class="sec-h"><div class="sec-t"><h3>Data lengkap</h3><p class="sec-sub" id="lkSub"></p></div><div class="right"><button class="btn" id="lkCsv">Unduh CSV</button></div></div>
             <div class="panel-b"><div class="tbl-wrap"><table class="tbl" id="lkTbl"></table></div></div></div>
         </div>
+      </div>
+
+      <!-- Dashboard Casemix (E-Klaim) -->
+      <div id="lpCasemix" class="tabpane" hidden>
+        <div class="pull closed" id="cPull">
+          <button class="pull-h" onclick="$('#cPull').classList.toggle('closed')"><span class="pull-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg></span><b>Tarik data</b><span class="meta" id="cPullMeta"></span><span class="pull-caret">▾</span></button>
+          <div class="pull-b"><div class="pull-grid">
+            <label class="field">Dari bulan (tanggal pulang)<select class="input" id="cDari"></select></label>
+            <label class="field">Sampai bulan<select class="input" id="cSampai"></select></label>
+            <label class="field">Kelas rawat<select class="input" id="cKelas"><option value="all">Semua kelas</option><option value="1">Kelas 1</option><option value="2">Kelas 2</option><option value="3">Kelas 3</option></select></label>
+            <label class="field">DPJP<select class="input" id="cDpjp"></select></label>
+            <label class="field">Jenis rawat<span class="seg" id="cJr"><button data-v="all" aria-pressed="true">Semua</button><button data-v="RI">Rawat Inap</button><button data-v="RJ">Rawat Jalan</button></span></label>
+            <div><button class="btn" id="cReset">Atur ulang</button></div>
+          </div><div class="note" id="cCakupan"></div></div>
+        </div>
+        <div class="tabs" id="cTabs" role="tablist">
+          <button data-t="ikhtisar" aria-selected="true">Ikhtisar</button>
+          <button data-t="cbg">Per INA-CBG</button>
+          <button data-t="dpjp">Per DPJP</button>
+          <button data-t="biaya">Komponen biaya</button>
+          <button data-t="idrg">INA-CBG vs iDRG</button>
+          <button data-t="ulang">Rawat ulang</button>
+          <button data-t="validasi">Validasi data <span class="tab-badge" id="cValBadge">0</span></button>
+          <button data-t="lengkap">Data lengkap</button>
+        </div>
+        <div class="facts" id="cFacts"></div>
+        <div class="tabpane" id="ct-ikhtisar">
+          <div class="sec"><div class="sec-h"><div class="sec-t"><span class="kicker">Bagian 1</span><h3>Ringkasan klaim</h3><p class="sec-sub">Tarif RS dibanding klaim INA-CBG (TOTAL_TARIF) dari file E-Klaim</p></div></div><div class="panel-b"><div class="kpis" id="cKpi"></div></div></div>
+          <div class="sec"><div class="sec-h"><div class="sec-t"><span class="kicker">Bagian 2</span><h3>Tren &amp; sebaran</h3><p class="sec-sub">Arahkan kursor ke grafik untuk melihat angkanya, klik batang untuk rinciannya</p></div></div>
+            <div class="panel-b"><div class="cgrid">
+              <div class="chart-card wide"><div class="cc-h"><h4>Tarif RS vs klaim INA-CBG per bulan</h4><span class="cc-sub">Rupiah, menurut bulan pasien pulang</span></div><div class="legend" id="ccBulanLg"></div><div class="chart" id="ccBulan"></div></div>
+              <div class="chart-card wide"><div class="cc-h"><h4>Selisih klaim − tarif RS per bulan</h4><span class="cc-sub">Hijau = klaim lebih besar, merah = rugi</span></div><div class="chart" id="ccSel"></div></div>
+              <div class="chart-card"><div class="cc-h"><h4>Kelas rawat</h4><span class="cc-sub">Jumlah kasus</span></div><div id="ccKelas"></div></div>
+              <div class="chart-card"><div class="cc-h"><h4>Cara pulang</h4><span class="cc-sub">Jumlah kasus</span></div><div id="ccPulang"></div></div>
+              <div class="chart-card"><div class="cc-h"><h4>Tingkat keparahan (severity)</h4><span class="cc-sub">Rawat inap, dari digit terakhir kode INA-CBG</span></div><div id="ccSev"></div></div>
+              <div class="chart-card"><div class="cc-h"><h4>Komponen tarif RS</h4><span class="cc-sub">Porsi dari total tarif RS</span></div><div class="hbars" id="ccKomp"></div></div>
+              <div class="chart-card"><div class="cc-h"><h4>15 INA-CBG terbanyak</h4><span class="cc-sub">Jumlah kasus</span></div><div class="hbars" id="ccTop"></div></div>
+              <div class="chart-card"><div class="cc-h"><h4>15 INA-CBG dengan rugi terbesar</h4><span class="cc-sub">Total selisih negatif</span></div><div class="hbars" id="ccRugi"></div></div>
+            </div></div></div>
+          <div class="sec"><div class="sec-h"><div class="sec-t"><span class="kicker">Bagian 3</span><h3>Analisa</h3><p class="sec-sub">Temuan otomatis</p></div></div>
+            <div class="panel-b"><div class="cgrid"><div class="chart-card"><div class="cc-h"><h4>Temuan</h4></div><ul class="insights" id="ccIns"></ul></div>
+              <div class="chart-card"><div class="cc-h"><h4>DPJP dengan selisih terbesar</h4><span class="cc-sub">Total selisih klaim − tarif RS</span></div><div class="hbars" id="ccDpjp"></div></div></div></div></div>
+        </div>
+        <div class="tabpane" id="ct-cbg" hidden><div class="sec"><div class="sec-h"><div class="sec-t"><h3>Per INA-CBG</h3><p class="sec-sub">Klik baris untuk membuka rinciannya di tab baru</p></div></div>
+          <div class="panel-b"><div class="toolbar"><input type="search" class="input" id="cCariCbg" placeholder="Cari kode atau nama INA-CBG…"><button class="btn" id="cCsvCbg">Unduh CSV</button></div><div class="tbl-wrap"><table class="tbl" id="cTblCbg"></table></div></div></div></div>
+        <div class="tabpane" id="ct-dpjp" hidden><div class="sec"><div class="sec-h"><div class="sec-t"><h3>Per DPJP</h3><p class="sec-sub">Klik baris untuk membuka rinciannya di tab baru</p></div></div>
+          <div class="panel-b"><div class="toolbar"><input type="search" class="input" id="cCariDpjp" placeholder="Cari nama dokter…"><button class="btn" id="cCsvDpjp">Unduh CSV</button></div><div class="tbl-wrap"><table class="tbl" id="cTblDpjp"></table></div></div></div></div>
+        <div class="tabpane" id="ct-biaya" hidden><div class="sec"><div class="sec-h"><div class="sec-t"><h3>Komponen tarif RS</h3><p class="sec-sub">Rincian tarif RS menurut 16 komponen E-Klaim, dibanding klaim INA-CBG</p></div></div><div class="panel-b"><div class="tbl-wrap"><table class="tbl" id="cTblKomp"></table></div></div></div></div>
+        <div class="tabpane" id="ct-idrg" hidden><div class="sec"><div class="sec-h"><div class="sec-t"><h3>INA-CBG vs iDRG</h3><p class="sec-sub">Simulasi tarif iDRG (IDRG_TOTAL_TARIF) dibanding klaim INA-CBG yang berlaku, per MDC</p></div></div><div class="panel-b"><div class="kpis" id="cIdrgKpi" style="margin-bottom:14px"></div><div class="tbl-wrap"><table class="tbl" id="cTblIdrg"></table></div></div></div></div>
+        <div class="tabpane" id="ct-ulang" hidden><div class="sec"><div class="sec-h"><div class="sec-t"><h3>Rawat ulang ≤ 30 hari</h3><p class="sec-sub">Pasien rawat inap yang masuk lagi dalam 30 hari setelah pulang. Pasien dikenali dari kode acak pengganti No. RM; identitas tidak ditampilkan.</p></div></div><div class="panel-b"><div class="kpis" id="cUlangKpi" style="margin-bottom:14px"></div><div class="tbl-wrap"><table class="tbl" id="cTblUlang"></table></div></div></div></div>
+        <div class="tabpane" id="ct-validasi" hidden><div class="sec"><div class="sec-h"><div class="sec-t"><h3>Validasi data</h3><p class="sec-sub">Pemeriksaan otomatis terhadap file E-Klaim</p></div></div><div class="panel-b"><div class="checks" id="cCek"></div></div></div></div>
+        <div class="tabpane" id="ct-lengkap" hidden><div class="sec"><div class="sec-h"><div class="sec-t"><h3>Data lengkap</h3><p class="sec-sub" id="cLkSub"></p></div><div class="right"><button class="btn" id="cCsvAll">Unduh CSV</button></div></div><div class="panel-b"><div class="tbl-wrap"><table class="tbl" id="cTblAll"></table></div></div></div></div>
       </div>
 
       <!-- Unit lain: penampil file -->
@@ -635,7 +689,7 @@ async function muat(paksa){
     $('#refreshWhen').textContent = 'Dibaca ' + tglID(S.katalog.dibaca);
     $('#navCount').textContent = S.katalog.file.length;
     if (paksa) S.isi = {};
-    await muatFarmasi();
+    await Promise.all([muatFarmasi(), muatCasemix()]);
     $('#connDot').className = 'dot ok'; $('#connTxt').textContent = 'terhubung';
   } catch (e) {
     $('#loading').innerHTML = '<div class="panel panel-b" style="max-width:520px"><h3 style="margin-bottom:6px">Gagal memuat dashboard</h3><p class="note">' + esc(e) + '</p><button class="btn primary" onclick="location.reload()">Coba lagi</button></div>';
@@ -645,7 +699,18 @@ async function muat(paksa){
   renderTree(); renderSemua();
 }
 async function muatUlang(){ toast('Memuat ulang data…'); await muat(true); toast('Data diperbarui.'); }
-async function ambilIsi(id){ if (!S.isi[id]) S.isi[id] = JSON.parse(await run('getIsiFile', id)); return S.isi[id]; }
+async function ambilIsi(id){
+  if (S.isi[id]) return S.isi[id];
+  if (window.DecompressionStream && !S.tanpaGz) {
+    try {
+      const b64 = await run('getIsiFileGz', id), bin = atob(b64), u = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      const teks = await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+      return (S.isi[id] = JSON.parse(teks));
+    } catch (e) { if (/getIsiFileGz|tidak ada|not found|is not a function|Script function/i.test(String(e))) S.tanpaGz = true; else throw e; }
+  }
+  return (S.isi[id] = JSON.parse(await run('getIsiFile', id)));
+}
 const unitFarmasi = f => /farmasi|apotek|obat/i.test(f.unit + ' ' + f.nama);
 async function muatFarmasi(){
   S.farmasiFiles = [];
@@ -743,12 +808,12 @@ function donat(el, items, opt){
 function batangH(el, items){
   const mx = Math.max(...items.map(x => Math.abs(x.v)), 1), tot = opt => 0;
   const total = items.reduce((s, x) => s + x.v, 0) || 1;
-  el.innerHTML = items.length ? items.map((x, i) => '<div class="hb"' + (x.klik ? ' onclick="' + x.klik + '"' : '') + ' title="' + esc(x.n + ' — ' + rp(x.v)) + '"><span class="l">' + esc(x.n) + '</span><span class="b"><i style="width:' + Math.max(1, 72 * Math.abs(x.v) / mx) + '%;background:var(--c' + (i % 8 + 1) + ')"></i><span>' + rpS(x.v, true) + ' <small>(' + pct(x.v / (x.dari || total)) + ')</small></span></span></div>').join('') : '<div class="empty">Tidak ada data.</div>';
+  el.innerHTML = items.length ? items.map((x, i) => '<div class="hb"' + (x.klik ? ' onclick="' + x.klik + '"' : '') + ' title="' + esc(x.n + ' — ' + rp(x.v)) + '"><span class="l">' + esc(x.n) + '</span><span class="b"><i style="width:' + Math.max(1, 72 * Math.abs(x.v) / mx) + '%;background:var(--c' + (i % 8 + 1) + ')"></i><span>' + (x.lbl != null ? x.lbl : rpS(x.v, true) + ' <small>(' + pct(x.v / (x.dari || total)) + ')</small>') + '</span></span></div>').join('') : '<div class="empty">Tidak ada data.</div>';
 }
 
 /* ===================== Komponen ===================== */
 function kpi(o){
-  return '<div class="kpi kc-' + o.c + (o.klik ? ' clickable' : '') + '"' + (o.klik ? ' onclick="' + o.klik + '"' : '') + '><div class="kpi-top"><span class="kpi-ic">' + IC[o.ic] + '</span><span class="kpi-l">' + esc(o.l) + '</span></div><div class="kpi-v">' + o.v + '</div><div class="kpi-f">' + o.f + '</div></div>';
+  return '<div class="kpi kc-' + o.c + (o.st ? ' st-' + o.st : '') + (o.klik ? ' clickable' : '') + '"' + (o.klik ? ' onclick="' + o.klik + '"' : '') + '><div class="kpi-top"><span class="kpi-ic">' + IC[o.ic] + '</span><span class="kpi-l">' + esc(o.l) + '</span></div><div class="kpi-v">' + o.v + '</div><div class="kpi-f">' + o.f + '</div></div>';
 }
 function delta(a, b){
   if (!b) return '<span class="delta flat">—</span>';
@@ -823,7 +888,7 @@ function renderTree(){
     (keys.length ? '' : '<div class="note" style="padding:0 8px">Belum ada subfolder unit.</div>');
 }
 function pillStatus(f){ return f.terbaru ? '<span class="pill ok">siap</span>' : f.siap ? '<span class="pill warn">diperbarui</span>' : '<span class="pill warn">menunggu</span>'; }
-const fmtFile = n => /\.csv$/i.test(n) ? '<span class="fmt csv">CSV</span>' : /\.xlsx?$|\.xlsm$/i.test(n) ? '<span class="fmt">XLS</span>' : '<span class="fmt">GS</span>';
+const fmtFile = n => /\.txt$/i.test(n) ? '<span class="fmt csv">TXT</span>' : /\.csv$/i.test(n) ? '<span class="fmt csv">CSV</span>' : /\.xlsx?$|\.xlsm$/i.test(n) ? '<span class="fmt">XLS</span>' : '<span class="fmt">GS</span>';
 function kartuUnit(){
   const U = perUnit(), keys = Object.keys(U).sort((a, b) => a.localeCompare(b));
   return keys.length ? keys.map(u => {
@@ -837,6 +902,15 @@ function kartuUnit(){
 
 function renderRingkasan(){
   $('#rkUnit').innerHTML = kartuUnit();
+  $('#rkCmxSec').hidden = !S.cmx;
+  if (S.cmx) {
+    const simpan = { ...S.c }; Object.assign(S.c, { jr: 'all', kelas: 'all', dpjp: 'all', dari: S.cmx.yms[0], sampai: S.cmx.yms[S.cmx.yms.length - 1] });
+    const A = agregatC(S.cmx.rec);
+    $('#rkCmxSub').textContent = 'Dari ' + S.cmx.files.length + ' file E-Klaim · Rawat inap ' + S.cmx.cakupan.RI + ' · Rawat jalan ' + S.cmx.cakupan.RJ;
+    $('#rkCmx').innerHTML = kpiCasemix(A).replace(/onclick="S\.ctab=/g, 'onclick="bukaUnit(\'Casemix\');S.ctab=');
+    $('#rkCmxIns').innerHTML = insHtml(analisaC(S.cmx.rec, A).slice(0, 4));
+    Object.assign(S.c, simpan);
+  }
   const nUnit = Object.keys(perUnit()).length;
   if (!S.farmasi) {
     $('#rkFacts').innerHTML = '<div><span class="fl">Unit</span><b>' + nUnit + '</b></div><div><span class="fl">File data</span><b>' + S.katalog.file.length + '</b></div>';
@@ -853,14 +927,16 @@ function renderRingkasan(){
 
 function renderLaporan(){
   const U = perUnit();
-  $('#lpSemua').hidden = !!S.unit; $('#lpFarmasi').hidden = S.unit !== 'Farmasi' || !S.farmasi; $('#lpUnit').hidden = !S.unit || (S.unit === 'Farmasi' && !!S.farmasi);
+  const fOk = S.unit === 'Farmasi' && !!S.farmasi, cOk = S.unit === 'Casemix' && !!S.cmx;
+  $('#lpSemua').hidden = !!S.unit; $('#lpFarmasi').hidden = !fOk; $('#lpCasemix').hidden = !cOk; $('#lpUnit').hidden = !S.unit || fOk || cOk;
   $$('#v-laporan .back').forEach(b => b.hidden = !S.unit);
   if (!S.unit) {
     $('#lpCrumb').textContent = 'Laporan Unit'; $('#lpJudul').textContent = 'Laporan & Dashboard';
     $('#lpLead').textContent = Object.keys(U).length + ' unit · ' + S.katalog.file.length + ' file data di folder Google Drive. Pilih unit untuk membuka dashboard-nya.';
     $('#lpUnits').innerHTML = kartuUnit(); return;
   }
-  if (S.unit === 'Farmasi' && S.farmasi) { renderFarmasi(); return; }
+  if (fOk) { renderFarmasi(); return; }
+  if (cOk) { renderCasemix(); return; }
   $('#lpCrumb').textContent = 'Laporan Unit · Daftar file'; $('#lpJudul').textContent = S.unit;
   $('#lpLead').textContent = (U[S.unit] || []).length + ' file di folder ini. Dashboard khusus unit ini belum dibuat; isi file bisa dilihat di bawah.';
   renderFileUnit(U[S.unit] || []);
@@ -1047,6 +1123,295 @@ function unduhCsv(nama, rows){
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nama; document.body.append(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
 }
+
+/* ===================== Casemix (E-Klaim INA-CBG / iDRG) ===================== */
+const KOMP = [['PROSEDUR_NON_BEDAH','Prosedur non bedah'],['PROSEDUR_BEDAH','Prosedur bedah'],['KONSULTASI','Konsultasi'],['TENAGA_AHLI','Tenaga ahli'],['KEPERAWATAN','Keperawatan'],['PENUNJANG','Penunjang'],['RADIOLOGI','Radiologi'],['LABORATORIUM','Laboratorium'],['PELAYANAN_DARAH','Pelayanan darah'],['REHABILITASI','Rehabilitasi'],['KAMAR_AKOMODASI','Kamar/akomodasi'],['RAWAT_INTENSIF','Rawat intensif'],['OBAT','Obat'],['ALKES','Alkes'],['BMHP','BMHP'],['SEWA_ALAT','Sewa alat'],['OBAT_KRONIS','Obat kronis'],['OBAT_KEMO','Obat kemoterapi']];
+const PULANG = { '1': 'Atas persetujuan dokter', '2': 'Dirujuk', '3': 'Atas permintaan sendiri', '4': 'Meninggal', '5': 'Lain-lain' };
+const JRC = { RI: 'Rawat Inap', RJ: 'Rawat Jalan' };
+S.c = { jr: 'all', dari: null, sampai: null, kelas: 'all', dpjp: 'all' }; S.ctab = 'ikhtisar'; S.csort = {}; S.cari2 = {};
+
+function uraiEklaim(sheet, fileNama){
+  const B = sheet.baris || [], H = (B[0] || []).map(h => String(h).toUpperCase());
+  if (H.indexOf('INACBG') < 0 || H.indexOf('TARIF_RS') < 0) return null;
+  const ix = {}; H.forEach((h, i) => ix[h] = i);
+  const g = (row, k) => ix[k] == null ? '' : row[ix[k]];
+  const n = (row, k) => { const v = g(row, k); return typeof v === 'number' ? v : (Number(String(v).replace(',', '.')) || 0); };
+  const tgl = v => { v = String(v || ''); const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(v); return m ? m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0') : v.slice(0, 10); };
+  const out = [];
+  for (let r = 1; r < B.length; r++) {
+    const row = B[r]; if (!row || !g(row, 'INACBG')) continue;
+    const cbg = String(g(row, 'INACBG')).trim(), seg = cbg.split('-'), tk = tgl(g(row, 'DISCHARGE_DATE'));
+    const komp = {}; KOMP.forEach(([k]) => { const v = n(row, k); if (v) komp[k] = v; });
+    out.push({ jr: String(g(row, 'PTD')) === '2' ? 'RJ' : 'RI', tm: tgl(g(row, 'ADMISSION_DATE')), tk, ym: tk.slice(0, 7), kelas: String(g(row, 'KELAS_RAWAT')),
+      cbg, desc: String(g(row, 'DESKRIPSI_INACBG') || ''), sev: seg.length >= 4 ? seg[3] : '', klaim: n(row, 'TOTAL_TARIF'), rs: n(row, 'TARIF_RS'), idrg: n(row, 'IDRG_TOTAL_TARIF'),
+      los: n(row, 'LOS'), st: String(g(row, 'DISCHARGE_STATUS')), sex: String(g(row, 'SEX')), umur: n(row, 'UMUR_TAHUN'), dpjp: String(g(row, 'DPJP') || '').replace(/\s+/g, ' ').trim() || '(tanpa DPJP)',
+      icu: n(row, 'ICU_INDIKATOR'), pid: String(g(row, 'PASIEN_KODE') || ''), diag: String(g(row, 'DIAGLIST') || '').split(';')[0], mdc: String(g(row, 'IDRG_MDC_DESCRIPTION') || '') || '(tanpa MDC)',
+      drg: String(g(row, 'IDRG_DRG_DESCRIPTION') || ''), coder: String(g(row, 'CODER_ID') || ''), komp, file: fileNama });
+  }
+  return out;
+}
+async function muatCasemix(){
+  const calon = S.katalog.file.filter(f => f.siap && (/casemix|klaim|inacbg|ina-cbg/i.test(f.unit) || /\.txt$/i.test(f.nama)));
+  const hasil = await Promise.all(calon.map(async f => { try { const isi = await ambilIsi(f.id); for (const sh of isi.sheets) { const r = uraiEklaim(sh, f.nama); if (r) return { f, r }; } } catch (e) { console.warn(f.nama, e); } return null; }));
+  const ok = hasil.filter(Boolean), seen = new Set(), rec = []; let dup = 0;
+  ok.forEach(x => x.r.forEach(r => { const k = [r.pid, r.tm, r.tk, r.cbg, r.rs, r.jr].join('|'); if (seen.has(k)) { dup++; return; } seen.add(k); rec.push(r); }));
+  if (!rec.length) { S.cmx = null; return; }
+  const yms = [...new Set(rec.map(r => r.ym))].filter(Boolean).sort();
+  const cak = jr => { const y = [...new Set(rec.filter(r => r.jr === jr).map(r => r.ym))].sort(); return y.length ? ymLabel(y[0]) + (y.length > 1 ? ' – ' + ymLabel(y[y.length - 1]) : '') + ' (' + y.length + ' bln)' : '-'; };
+  S.cmx = { rec, yms, files: ok.map(x => x.f), dup, cakupan: { RI: cak('RI'), RJ: cak('RJ') } };
+  const opt = yms.map(ym => '<option value="' + ym + '">' + ymPanjang(ym) + '</option>').join('');
+  $('#cDari').innerHTML = opt; $('#cSampai').innerHTML = opt;
+  if (!S.c.dari || !yms.includes(S.c.dari)) S.c.dari = yms[0];
+  if (!S.c.sampai || !yms.includes(S.c.sampai)) S.c.sampai = yms[yms.length - 1];
+  $('#cDari').value = S.c.dari; $('#cSampai').value = S.c.sampai;
+  const dp = [...new Set(rec.map(r => r.dpjp))].sort((a, b) => a.localeCompare(b));
+  $('#cDpjp').innerHTML = '<option value="all">Semua DPJP</option>' + dp.map(d => '<option>' + esc(d) + '</option>').join('');
+  $('#cDpjp').value = S.c.dpjp;
+  $('#cCakupan').textContent = 'Cakupan file: Rawat Inap ' + S.cmx.cakupan.RI + ' · Rawat Jalan ' + S.cmx.cakupan.RJ + '. Bulan dihitung dari tanggal pasien pulang.';
+}
+function saringC(opt){
+  opt = opt || {}; const c = S.c; if (!S.cmx) return [];
+  return S.cmx.rec.filter(r => r.ym >= c.dari && r.ym <= c.sampai && (opt.abaikanJr || c.jr === 'all' || r.jr === c.jr) && (c.kelas === 'all' || r.kelas === c.kelas) && (opt.abaikanDpjp || c.dpjp === 'all' || r.dpjp === c.dpjp));
+}
+const bulanC = () => S.cmx ? S.cmx.yms.filter(ym => ym >= S.c.dari && ym <= S.c.sampai) : [];
+function agregatC(rows){
+  const o = { n: rows.length, rs: 0, klaim: 0, idrg: 0, rugi: 0, rugiN: 0, losRI: 0, nRI: 0, nRJ: 0, mati: 0, icu: 0, rugiV: 0 };
+  rows.forEach(r => { o.rs += r.rs; o.klaim += r.klaim; o.idrg += r.idrg; const s = r.klaim - r.rs; if (s < 0) { o.rugiN++; o.rugiV += s; }
+    if (r.jr === 'RI') { o.nRI++; o.losRI += r.los; if (r.st === '4') o.mati++; if (r.icu) o.icu++; } else o.nRJ++; });
+  o.sel = o.klaim - o.rs; o.alos = o.nRI ? o.losRI / o.nRI : 0; return o;
+}
+function grupC(rows, kf){
+  const m = {};
+  rows.forEach(r => { const k = kf(r), x = m[k] || (m[k] = { k, rows: [] }); x.rows.push(r); });
+  return Object.values(m).map(x => Object.assign(x, agregatC(x.rows)));
+}
+const selKls = v => v < 0 ? 'neg' : v > 0 ? 'pos' : '';
+function barGroup(el, labels, series, opt){
+  opt = opt || {};
+  const W = Math.max(560, el.clientWidth || 800), H = opt.h || 300, L = 58, R = 10, T = 24, B = 28;
+  const mx = niceMax(Math.max(...series.flatMap(d => d.v), 1)), iw = W - L - R, ih = H - T - B, bw = iw / labels.length, gw = Math.min(70, bw * .7), w = gw / series.length;
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img">';
+  for (let g = 0; g <= 4; g++) { const y = T + ih - ih * g / 4; s += '<line class="grid-l" x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '"/><text x="' + (L - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + rpS(mx * g / 4, true) + '</text>'; }
+  labels.forEach((lb, i) => {
+    const x0 = L + bw * i + (bw - gw) / 2, t = '<b>' + esc(opt.judul ? opt.judul(i) : lb) + '</b>' + series.map(d => '<div class="r"><span><span class="sw" style="background:' + d.c + '"></span>' + esc(d.n) + '</span><span>' + rpS(d.v[i]) + '</span></div>').join('') + (opt.ekstra ? opt.ekstra(i) : '');
+    series.forEach((d, k) => { const v = Math.max(0, d.v[i]), h = ih * v / mx; s += '<rect class="hit" x="' + (x0 + k * w) + '" y="' + (T + ih - h) + '" width="' + Math.max(w - 2, 1) + '" height="' + Math.max(h, .5) + '" rx="2" fill="' + d.c + '" data-tip="' + esc(t) + '"' + (opt.klik ? ' onclick="' + opt.klik(i) + '" style="cursor:pointer"' : '') + '/>'; });
+    s += '<text x="' + (x0 + gw / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(lb) + '</text>';
+  });
+  el.innerHTML = s + '<line class="axis-l" x1="' + L + '" x2="' + (W - R) + '" y1="' + (T + ih) + '" y2="' + (T + ih) + '"/></svg>'; pasangTip(el);
+}
+function barPN(el, labels, vals, opt){
+  opt = opt || {};
+  const W = Math.max(560, el.clientWidth || 800), H = opt.h || 230, L = 58, R = 10, T = 22, B = 28;
+  const mx = niceMax(Math.max(...vals.map(Math.abs), 1)), iw = W - L - R, ih = H - T - B, bw = iw / labels.length, w = Math.min(54, bw * .55), y0 = T + ih / 2;
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img">';
+  [-1, -.5, 0, .5, 1].forEach(g => { const y = y0 - ih / 2 * g; s += '<line class="' + (g ? 'grid-l' : 'axis-l') + '" x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '"/><text x="' + (L - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + rpS(mx * g, true) + '</text>'; });
+  labels.forEach((lb, i) => {
+    const v = vals[i], h = ih / 2 * Math.abs(v) / mx, x = L + bw * i + (bw - w) / 2, y = v >= 0 ? y0 - h : y0;
+    s += '<rect class="hit" x="' + x + '" y="' + y + '" width="' + w + '" height="' + Math.max(h, .5) + '" rx="2" fill="' + (v >= 0 ? 'var(--ok)' : 'var(--bad)') + '" data-tip="' + esc('<b>' + esc(opt.judul ? opt.judul(i) : lb) + '</b><div class="r"><span>Selisih</span><span>' + rp(v) + '</span></div>') + '"/>';
+    s += '<text class="vlab" x="' + (x + w / 2) + '" y="' + (v >= 0 ? y - 5 : y + h + 13) + '" text-anchor="middle">' + rpS(v, true) + '</text><text x="' + (x + w / 2) + '" y="' + (H - 6) + '" text-anchor="middle">' + esc(lb) + '</text>';
+  });
+  el.innerHTML = s + '</svg>'; pasangTip(el);
+}
+function kpiCasemix(A, ringkas){
+  const p = A.rs ? A.sel / A.rs : 0;
+  let h = kpi({ c: 1, ic: 'list', l: 'Jumlah kasus', v: ang(A.n), f: 'Rawat Inap ' + ang(A.nRI) + ' · Rawat Jalan ' + ang(A.nRJ) });
+  h += kpi({ c: 2, ic: 'bld', l: 'Total tarif RS', v: rpS(A.rs), f: 'Rata-rata ' + rpS(A.n ? A.rs / A.n : 0) + '/kasus' });
+  h += kpi({ c: 7, ic: 'shield', l: 'Total klaim INA-CBG', v: rpS(A.klaim), f: 'Rata-rata ' + rpS(A.n ? A.klaim / A.n : 0) + '/kasus' });
+  h += kpi({ c: A.sel < 0 ? 4 : 5, st: A.sel < 0 ? 'bad' : 'ok', ic: 'rp', l: 'Selisih klaim − tarif RS', v: rpS(A.sel), f: (A.sel < 0 ? 'Klaim lebih kecil ' : 'Klaim lebih besar ') + pct(Math.abs(p)) + ' dari tarif RS' });
+  if (ringkas) return h;
+  h += kpi({ c: 8, ic: 'rp', l: 'Kasus rugi (klaim < tarif RS)', v: pct(A.n ? A.rugiN / A.n : 0), f: ang(A.rugiN) + ' kasus · ' + rpS(A.rugiV), klik: "S.ctab='cbg';S.csort.cbg={k:'rugiV',d:1};renderCasemix()" });
+  h += kpi({ c: 6, ic: 'bed', l: 'Rata-rata lama rawat (ALOS)', v: A.nRI ? A.alos.toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' hari' : '-', f: 'Rawat inap · ' + ang(A.icu) + ' kasus ICU' });
+  h += kpi({ c: 3, ic: 'user', l: 'Pasien meninggal (rawat inap)', v: ang(A.mati), f: A.nRI ? pct(A.mati / A.nRI, 2) + ' dari kasus rawat inap' : '-' });
+  h += kpi({ c: 5, ic: 'cal', l: 'Simulasi iDRG', v: rpS(A.idrg), f: A.klaim ? (A.idrg >= A.klaim ? '▲ ' : '▼ ') + pct(Math.abs(A.idrg - A.klaim) / A.klaim) + ' dibanding INA-CBG' : '-', klik: "S.ctab='idrg';renderCasemix()" });
+  return h;
+}
+function analisaC(rows, A){
+  const out = [], yms = bulanC();
+  if (!A.n) return [['', 'Belum ada data pada periode ini.']];
+  out.push([A.sel < 0 ? 'bad' : 'ok', 'Selisih klaim terhadap tarif RS <b>' + rpS(A.sel) + '</b> (' + pct(A.rs ? A.sel / A.rs : 0) + '). ' + ang(A.rugiN) + ' dari ' + ang(A.n) + ' kasus (' + pct(A.rugiN / A.n) + ') klaimnya di bawah tarif RS.']);
+  const bl = grupC(rows, r => r.ym).filter(x => yms.includes(x.k)).sort((a, b) => a.sel - b.sel);
+  if (bl.length > 1) out.push(['', 'Selisih terburuk di <b>' + ymPanjang(bl[0].k) + '</b> (' + rpS(bl[0].sel) + '), terbaik di <b>' + ymPanjang(bl[bl.length - 1].k) + '</b> (' + rpS(bl[bl.length - 1].sel) + ').']);
+  const cg = grupC(rows, r => r.cbg).sort((a, b) => a.sel - b.sel);
+  if (cg[0] && cg[0].sel < 0) out.push(['bad', 'INA-CBG penyumbang rugi terbesar: <b>' + esc(cg[0].k) + '</b> ' + esc(cg[0].rows[0].desc.toLowerCase()) + ' (' + ang(cg[0].n) + ' kasus, selisih ' + rpS(cg[0].sel) + ').']);
+  const kt = {}; rows.forEach(r => Object.entries(r.komp).forEach(([k, v]) => kt[k] = (kt[k] || 0) + v));
+  const kk = Object.entries(kt).sort((a, b) => b[1] - a[1]);
+  if (kk.length) out.push(['', 'Komponen tarif RS terbesar: ' + kk.slice(0, 3).map(([k, v]) => '<b>' + esc((KOMP.find(x => x[0] === k) || [k, k])[1]) + '</b> ' + pct(v / (A.rs || 1))).join(', ') + '.']);
+  if (A.nRI) out.push(['', 'ALOS rawat inap ' + A.alos.toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' hari; ' + ang(A.mati) + ' pasien meninggal (' + pct(A.mati / A.nRI, 2) + ').']);
+  if (A.idrg && A.klaim) out.push([A.idrg >= A.klaim ? 'ok' : 'bad', 'Bila dihitung dengan iDRG, total klaim menjadi ' + rpS(A.idrg) + ' (' + (A.idrg >= A.klaim ? 'naik ' : 'turun ') + pct(Math.abs(A.idrg - A.klaim) / A.klaim) + ' dari INA-CBG).']);
+  const ul = rawatUlang(rows); if (ul.idx) out.push([ul.n / ul.idx > .05 ? 'bad' : '', 'Rawat ulang ≤ 30 hari: <b>' + ang(ul.n) + '</b> kasus (' + pct(ul.n / ul.idx) + ' dari pasien rawat inap yang pulang).']);
+  if (S.cmx.cakupan.RJ === '-' ) out.push(['', 'Data rawat jalan belum ada; angka di atas hanya rawat inap.']);
+  else if (S.cmx.cakupan.RJ !== S.cmx.cakupan.RI) out.push(['', 'Cakupan bulan rawat jalan (' + S.cmx.cakupan.RJ + ') berbeda dengan rawat inap (' + S.cmx.cakupan.RI + '); hati-hati membandingkan antarbulan.']);
+  return out;
+}
+function rawatUlang(rows){
+  const ri = rows.filter(r => r.jr === 'RI' && r.pid && r.tm && r.tk);
+  const all = S.cmx.rec.filter(r => r.jr === 'RI' && r.pid && r.tm && r.tk);
+  const per = {}; all.forEach(r => (per[r.pid] = per[r.pid] || []).push(r));
+  Object.values(per).forEach(a => a.sort((x, y) => x.tm.localeCompare(y.tm)));
+  const set = new Set(ri), pasangan = [];
+  Object.values(per).forEach(a => { for (let i = 1; i < a.length; i++) { const d = (new Date(a[i].tm) - new Date(a[i - 1].tk)) / 864e5; if (d >= 0 && d <= 30 && set.has(a[i])) pasangan.push({ awal: a[i - 1], ulang: a[i], hari: Math.round(d) }); } });
+  return { n: pasangan.length, idx: ri.length, pasangan };
+}
+
+function renderCasemix(){
+  const C = S.cmx, c = S.c;
+  if (c.dari > c.sampai) { const t = c.dari; c.dari = c.sampai; c.sampai = t; $('#cDari').value = c.dari; $('#cSampai').value = c.sampai; }
+  $$('#cJr button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === c.jr));
+  $$('#cTabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t === S.ctab));
+  $$('#lpCasemix > .tabpane').forEach(p => p.hidden = p.id !== 'ct-' + S.ctab);
+  const rows = saringC(), A = agregatC(rows), yms = bulanC();
+  const filt = [c.jr !== 'all' ? JRC[c.jr] : '', c.kelas !== 'all' ? 'Kelas ' + c.kelas : '', c.dpjp !== 'all' ? c.dpjp : ''].filter(Boolean).join(' · ') || 'Semua jenis rawat, kelas & DPJP';
+  $('#lpCrumb').textContent = 'Laporan Unit · Dashboard gabungan'; $('#lpJudul').textContent = 'Casemix › Klaim INA-CBG';
+  $('#lpLead').textContent = C.files.length + ' file E-Klaim di folder ini digabung otomatis. Identitas pasien (nama, No. kartu, tanggal lahir, No. RM, SEP) tidak disimpan dan tidak ditampilkan.';
+  $('#cPullMeta').textContent = ymLabel(c.dari) + ' – ' + ymLabel(c.sampai) + ' · ' + ang(A.n) + ' kasus · ' + filt;
+  $('#cFacts').innerHTML = '<div><span class="fl">Periode</span><b>' + ymLabel(c.dari) + ' – ' + ymLabel(c.sampai) + '</b></div><div><span class="fl">Filter</span><b>' + esc(filt) + '</b></div><div><span class="fl">Rawat inap</span><b>' + ang(A.nRI) + ' kasus</b></div><div><span class="fl">Rawat jalan</span><b>' + ang(A.nRJ) + ' kasus</b></div><div><span class="fl">INA-CBG / DPJP</span><b>' + new Set(rows.map(r => r.cbg)).size + ' / ' + new Set(rows.map(r => r.dpjp)).size + '</b></div>';
+  const cek = validasiC(); const nW = cek.filter(x => x.s !== 'ok').length; $('#cValBadge').textContent = nW; $('#cValBadge').className = 'tab-badge ' + (nW ? 'warn' : 'ok');
+
+  if (S.ctab === 'ikhtisar') {
+    $('#cKpi').innerHTML = kpiCasemix(A);
+    const bl = yms.map(ym => agregatC(rows.filter(r => r.ym === ym)));
+    const ser = [{ n: 'Tarif RS', c: 'var(--c2)', v: bl.map(x => x.rs) }, { n: 'Klaim INA-CBG', c: 'var(--c1)', v: bl.map(x => x.klaim) }];
+    legenda($('#ccBulanLg'), ser);
+    barGroup($('#ccBulan'), yms.map(ymLabel), ser, { judul: i => ymPanjang(yms[i]) + ' · ' + ang(bl[i].n) + ' kasus', ekstra: i => '<div class="r" style="border-top:1px solid rgba(255,255,255,.25);margin-top:3px;padding-top:3px"><span>Selisih</span><b style="margin:0">' + rp(bl[i].sel) + '</b></div>' });
+    barPN($('#ccSel'), yms.map(ymLabel), bl.map(x => x.sel), { judul: i => ymPanjang(yms[i]) });
+    const cnt = (kf, lbl) => { const m = {}; rows.forEach(r => { const k = kf(r); m[k] = (m[k] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([k, v], i) => ({ n: lbl(k), v, c: 'var(--c' + (i % 8 + 1) + ')' })); };
+    donatN($('#ccKelas'), cnt(r => r.kelas || '-', k => 'Kelas ' + k));
+    donatN($('#ccPulang'), cnt(r => r.st || '-', k => PULANG[k] || ('Kode ' + k)));
+    donatN($('#ccSev'), (() => { const m = {}; rows.filter(r => r.jr === 'RI').forEach(r => { m[r.sev || '-'] = (m[r.sev || '-'] || 0) + 1; }); return ['I', 'II', 'III'].filter(k => m[k]).map((k, i) => ({ n: { I: 'Ringan (I)', II: 'Sedang (II)', III: 'Berat (III)' }[k], v: m[k], c: ['var(--c1)', 'var(--c3)', 'var(--c4)'][i] })); })());
+    const kt = {}; rows.forEach(r => Object.entries(r.komp).forEach(([k, v]) => kt[k] = (kt[k] || 0) + v));
+    batangH($('#ccKomp'), Object.entries(kt).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, v]) => ({ n: (KOMP.find(x => x[0] === k) || [k, k])[1], v, dari: A.rs, klik: "S.ctab='biaya';renderCasemix()" })));
+    const cg = grupC(rows, r => r.cbg);
+    batangH($('#ccTop'), cg.sort((a, b) => b.n - a.n).slice(0, 15).map(x => ({ n: x.k + ' ' + x.rows[0].desc, v: x.n, lbl: ang(x.n) + ' <small>(' + pct(x.n / A.n) + ')</small>', klik: "detailCbg('" + encodeURIComponent(x.k) + "')" })));
+    batangH($('#ccRugi'), cg.filter(x => x.sel < 0).sort((a, b) => a.sel - b.sel).slice(0, 15).map(x => ({ n: x.k + ' ' + x.rows[0].desc, v: x.sel, lbl: rpS(x.sel, true) + ' <small>(' + ang(x.n) + ' kasus)</small>', klik: "detailCbg('" + encodeURIComponent(x.k) + "')" })));
+    $('#ccIns').innerHTML = insHtml(analisaC(rows, A));
+    batangH($('#ccDpjp'), grupC(rows, r => r.dpjp).sort((a, b) => a.sel - b.sel).slice(0, 12).map(x => ({ n: x.k, v: x.sel, lbl: rpS(x.sel, true) + ' <small>(' + ang(x.n) + ' kasus)</small>', klik: "detailDpjp('" + encodeURIComponent(x.k) + "')" })));
+  }
+  if (S.ctab === 'cbg') tabelGrup('cbg', $('#cTblCbg'), grupC(rows, r => r.cbg), A, [['k', 'INA-CBG'], ['desc', 'Deskripsi']], x => "detailCbg('" + encodeURIComponent(x.k) + "')", x => { x.desc = x.rows[0].desc; });
+  if (S.ctab === 'dpjp') tabelGrup('dpjp', $('#cTblDpjp'), grupC(rows, r => r.dpjp), A, [['k', 'DPJP']], x => "detailDpjp('" + encodeURIComponent(x.k) + "')");
+  if (S.ctab === 'biaya') renderKomp(rows, A);
+  if (S.ctab === 'idrg') renderIdrg(rows, A);
+  if (S.ctab === 'ulang') renderUlang(rows);
+  if (S.ctab === 'validasi') $('#cCek').innerHTML = cek.map(x => '<div class="chk ' + x.s + '"><span class="chk-ic">' + (x.s === 'ok' ? '✓' : '!') + '</span><div><b>' + x.j + '</b><p>' + x.d + '</p></div></div>').join('');
+  if (S.ctab === 'lengkap') renderLengkapC(rows);
+}
+function donatN(el, items){
+  items = items.filter(x => x.v > 0); const tot = items.reduce((s, x) => s + x.v, 0) || 1, r = 62, C = 2 * Math.PI * r; let off = 0;
+  let s = '<svg class="donut" viewBox="0 0 170 170"><circle cx="85" cy="85" r="' + r + '" fill="none" stroke="var(--surface-2)" stroke-width="26"/>';
+  items.forEach(x => { const len = C * x.v / tot; s += '<circle class="seg" cx="85" cy="85" r="' + r + '" fill="none" stroke="' + x.c + '" stroke-width="26" stroke-dasharray="' + len + ' ' + (C - len) + '" stroke-dashoffset="' + (-off) + '" transform="rotate(-90 85 85)" data-tip="' + esc('<b>' + esc(x.n) + '</b><div class="r"><span>' + ang(x.v) + ' kasus</span><span>' + pct(x.v / tot) + '</span></div>') + '"/>'; off += len; });
+  s += '<text class="donut-v" x="85" y="86" text-anchor="middle">' + ang(tot) + '</text><text class="donut-l" x="85" y="103" text-anchor="middle">Kasus</text></svg>';
+  el.innerHTML = '<div class="donut-wrap">' + s + '<ul class="donut-legend">' + items.map(x => '<li><i style="background:' + x.c + '"></i><span class="dl-l" title="' + esc(x.n) + '">' + esc(x.n) + '</span><span class="dl-v">' + ang(x.v) + '</span><span class="dl-p">' + pct(x.v / tot) + '</span></li>').join('') + '</ul></div>';
+  pasangTip(el);
+}
+function tabelGrup(kunci, el, L, A, kolTeks, klik, prep){
+  if (prep) L.forEach(prep);
+  L.forEach(x => { x.pRugi = x.n ? x.rugiN / x.n : 0; x.rsAvg = x.n ? x.rs / x.n : 0; x.klaimAvg = x.n ? x.klaim / x.n : 0; x.pSel = x.rs ? x.sel / x.rs : 0; });
+  const q = (S.cari2[kunci] || '').toLowerCase(); if (q) L = L.filter(x => kolTeks.some(([k]) => String(x[k]).toLowerCase().includes(q)));
+  const so = S.csort[kunci] || { k: 'n', d: -1 }; L.sort((a, b) => { const va = a[so.k], vb = b[so.k]; return (typeof va === 'string' ? va.localeCompare(vb) : (va || 0) - (vb || 0)) * so.d; });
+  S['tbl_' + kunci] = L;
+  const th = (k, l, n) => '<th' + (n ? ' class="n"' : '') + ' data-k="' + k + '">' + l + (so.k === k ? (so.d > 0 ? ' ▲' : ' ▼') : '') + '</th>';
+  let h = '<thead><tr>' + kolTeks.map(([k, l]) => th(k, l)).join('') + th('n', 'Kasus', 1) + th('nRI', 'RI', 1) + th('alos', 'ALOS', 1) + th('rsAvg', 'Tarif RS rata²', 1) + th('klaimAvg', 'Klaim rata²', 1) + th('rs', 'Total tarif RS', 1) + th('klaim', 'Total klaim', 1) + th('sel', 'Selisih', 1) + th('pSel', '% selisih', 1) + th('pRugi', '% kasus rugi', 1) + th('mati', 'Meninggal', 1) + '</tr></thead><tbody>';
+  h += L.slice(0, 600).map(x => '<tr class="rowpick" onclick="' + klik(x) + '">' + kolTeks.map(([k]) => '<td' + (k === 'desc' ? ' style="white-space:normal;min-width:220px"' : '') + '>' + esc(x[k]) + '</td>').join('') + '<td class="n"><b>' + ang(x.n) + '</b></td><td class="n">' + ang(x.nRI) + '</td><td class="n">' + (x.nRI ? x.alos.toLocaleString('id-ID', { maximumFractionDigits: 1 }) : '-') + '</td><td class="n">' + ang(x.rsAvg) + '</td><td class="n">' + ang(x.klaimAvg) + '</td><td class="n">' + ang(x.rs) + '</td><td class="n">' + ang(x.klaim) + '</td><td class="n ' + selKls(x.sel) + '">' + ang(x.sel) + '</td><td class="n ' + selKls(x.sel) + '">' + pct(x.pSel) + '</td><td class="n">' + pct(x.pRugi, 0) + '</td><td class="n">' + (x.mati || '') + '</td></tr>').join('');
+  h += '<tr class="tfoot">' + kolTeks.map((_, i) => '<td>' + (i ? '' : 'Total (' + L.length + ')') + '</td>').join('') + '<td class="n">' + ang(A.n) + '</td><td class="n">' + ang(A.nRI) + '</td><td class="n">' + (A.nRI ? A.alos.toLocaleString('id-ID', { maximumFractionDigits: 1 }) : '-') + '</td><td></td><td></td><td class="n">' + ang(A.rs) + '</td><td class="n">' + ang(A.klaim) + '</td><td class="n">' + ang(A.sel) + '</td><td class="n">' + pct(A.rs ? A.sel / A.rs : 0) + '</td><td class="n">' + pct(A.n ? A.rugiN / A.n : 0, 0) + '</td><td class="n">' + ang(A.mati) + '</td></tr>';
+  el.innerHTML = h + '</tbody>';
+  el.querySelectorAll('th[data-k]').forEach(t => t.onclick = () => { const k = t.dataset.k; S.csort[kunci] = { k, d: so.k === k ? -so.d : (['k', 'desc'].includes(k) ? 1 : -1) }; renderCasemix(); });
+}
+function renderKomp(rows, A){
+  const kt = {}, kn = {}; rows.forEach(r => Object.entries(r.komp).forEach(([k, v]) => { kt[k] = (kt[k] || 0) + v; kn[k] = (kn[k] || 0) + 1; }));
+  const ri = rows.filter(r => r.jr === 'RI'), rj = rows.filter(r => r.jr === 'RJ'), sum = (rs, k) => rs.reduce((s, r) => s + (r.komp[k] || 0), 0);
+  let h = '<thead><tr><th>Komponen</th><th class="n">Total</th><th class="n">% tarif RS</th><th class="n">Kasus memakai</th><th class="n">Rata² per kasus</th><th class="n">Rawat Inap</th><th class="n">Rawat Jalan</th></tr></thead><tbody>';
+  KOMP.filter(([k]) => kt[k]).sort((a, b) => kt[b[0]] - kt[a[0]]).forEach(([k, l]) => { h += '<tr><td><b>' + esc(l) + '</b></td><td class="n"><b>' + ang(kt[k]) + '</b></td><td class="n">' + pct(kt[k] / (A.rs || 1)) + '</td><td class="n">' + ang(kn[k]) + '</td><td class="n">' + ang(kt[k] / (A.n || 1)) + '</td><td class="n">' + ang(sum(ri, k)) + '</td><td class="n">' + ang(sum(rj, k)) + '</td></tr>'; });
+  const tk = Object.values(kt).reduce((a, b) => a + b, 0);
+  h += '<tr class="tfoot"><td>Jumlah komponen</td><td class="n">' + ang(tk) + '</td><td class="n">' + pct(tk / (A.rs || 1)) + '</td><td></td><td class="n">' + ang(tk / (A.n || 1)) + '</td><td></td><td></td></tr>';
+  h += '<tr class="tfoot"><td>Total tarif RS (TARIF_RS)</td><td class="n">' + ang(A.rs) + '</td><td class="n">100%</td><td></td><td class="n">' + ang(A.rs / (A.n || 1)) + '</td><td></td><td></td></tr>';
+  h += '<tr class="tfoot"><td>Klaim INA-CBG</td><td class="n">' + ang(A.klaim) + '</td><td class="n">' + pct(A.klaim / (A.rs || 1)) + '</td><td></td><td class="n">' + ang(A.klaim / (A.n || 1)) + '</td><td></td><td></td></tr>';
+  $('#cTblKomp').innerHTML = h + '</tbody>';
+}
+function renderIdrg(rows, A){
+  const ada = rows.filter(r => r.idrg > 0), B = agregatC(ada);
+  $('#cIdrgKpi').innerHTML = kpi({ c: 7, ic: 'shield', l: 'Klaim INA-CBG (kasus ber-iDRG)', v: rpS(B.klaim), f: ang(B.n) + ' dari ' + ang(A.n) + ' kasus punya tarif iDRG' }) +
+    kpi({ c: 5, ic: 'cal', l: 'Simulasi tarif iDRG', v: rpS(B.idrg), f: B.klaim ? (B.idrg >= B.klaim ? '▲ ' : '▼ ') + pct(Math.abs(B.idrg - B.klaim) / B.klaim) + ' dibanding INA-CBG' : '-' }) +
+    kpi({ c: 2, ic: 'bld', l: 'Tarif RS', v: rpS(B.rs), f: 'Kasus yang sama' }) +
+    kpi({ c: B.idrg - B.rs < 0 ? 4 : 5, st: B.idrg - B.rs < 0 ? 'bad' : 'ok', ic: 'rp', l: 'Selisih iDRG − tarif RS', v: rpS(B.idrg - B.rs), f: 'Bandingkan dengan selisih INA-CBG ' + rpS(B.sel) });
+  const G = grupC(ada, r => r.mdc).sort((a, b) => b.n - a.n);
+  let h = '<thead><tr><th>MDC (iDRG)</th><th class="n">Kasus</th><th class="n">Tarif RS</th><th class="n">Klaim INA-CBG</th><th class="n">Tarif iDRG</th><th class="n">iDRG − INA-CBG</th><th class="n">%</th><th class="n">iDRG − tarif RS</th></tr></thead><tbody>';
+  h += G.map(x => '<tr><td>' + esc(x.k) + '</td><td class="n">' + ang(x.n) + '</td><td class="n">' + ang(x.rs) + '</td><td class="n">' + ang(x.klaim) + '</td><td class="n">' + ang(x.idrg) + '</td><td class="n ' + selKls(x.idrg - x.klaim) + '">' + ang(x.idrg - x.klaim) + '</td><td class="n ' + selKls(x.idrg - x.klaim) + '">' + pct(x.klaim ? (x.idrg - x.klaim) / x.klaim : 0) + '</td><td class="n ' + selKls(x.idrg - x.rs) + '">' + ang(x.idrg - x.rs) + '</td></tr>').join('');
+  h += '<tr class="tfoot"><td>Total</td><td class="n">' + ang(B.n) + '</td><td class="n">' + ang(B.rs) + '</td><td class="n">' + ang(B.klaim) + '</td><td class="n">' + ang(B.idrg) + '</td><td class="n">' + ang(B.idrg - B.klaim) + '</td><td class="n">' + pct(B.klaim ? (B.idrg - B.klaim) / B.klaim : 0) + '</td><td class="n">' + ang(B.idrg - B.rs) + '</td></tr>';
+  $('#cTblIdrg').innerHTML = h + '</tbody>';
+}
+function renderUlang(rows){
+  const U = rawatUlang(rows), P = U.pasangan;
+  const tot = P.reduce((s, x) => s + x.ulang.rs, 0), kl = P.reduce((s, x) => s + x.ulang.klaim, 0);
+  $('#cUlangKpi').innerHTML = kpi({ c: 4, ic: 'bed', l: 'Rawat ulang ≤ 30 hari', v: ang(U.n), f: U.idx ? pct(U.n / U.idx) + ' dari ' + ang(U.idx) + ' kasus rawat inap' : '-' }) +
+    kpi({ c: 3, ic: 'cal', l: 'Jarak rata-rata', v: P.length ? (P.reduce((s, x) => s + x.hari, 0) / P.length).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' hari' : '-', f: P.filter(x => x.hari <= 7).length + ' kasus dalam 7 hari' }) +
+    kpi({ c: 2, ic: 'bld', l: 'Tarif RS kasus ulang', v: rpS(tot), f: 'Klaim ' + rpS(kl) }) +
+    kpi({ c: tot > kl ? 4 : 5, st: kl - tot < 0 ? 'bad' : 'ok', ic: 'rp', l: 'Selisih kasus ulang', v: rpS(kl - tot), f: 'Klaim − tarif RS' });
+  const pairs = {}; P.forEach(x => { const k = x.awal.cbg + '→' + x.ulang.cbg, o = pairs[k] || (pairs[k] = { a: x.awal, u: x.ulang, n: 0, hari: 0, dp: new Set() }); o.n++; o.hari += x.hari; o.dp.add(x.ulang.dpjp); });
+  const L = Object.values(pairs).sort((a, b) => b.n - a.n);
+  $('#cTblUlang').innerHTML = '<thead><tr><th>INA-CBG rawat pertama</th><th>INA-CBG rawat ulang</th><th class="n">Kasus</th><th class="n">Jarak rata²</th><th>DPJP rawat ulang</th></tr></thead><tbody>' +
+    (L.length ? L.slice(0, 300).map(x => '<tr><td style="white-space:normal"><b>' + esc(x.a.cbg) + '</b> ' + esc(x.a.desc) + '</td><td style="white-space:normal"><b>' + esc(x.u.cbg) + '</b> ' + esc(x.u.desc) + '</td><td class="n"><b>' + x.n + '</b></td><td class="n">' + (x.hari / x.n).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' hr</td><td style="white-space:normal">' + [...x.dp].map(esc).join('; ') + '</td></tr>').join('') : '<tr><td colspan="5"><div class="empty">Tidak ada rawat ulang ≤ 30 hari pada periode ini.</div></td></tr>') + '</tbody>';
+}
+function validasiC(){
+  const C = S.cmx, R = C.rec, out = [];
+  out.push({ s: C.dup ? 'warn' : 'ok', j: C.dup ? C.dup + ' baris ganda dilewati' : 'Tidak ada baris ganda', d: C.dup ? 'Kasus yang sama muncul di lebih dari satu file (mis. file bulan yang sama diunggah dua kali); hanya dihitung sekali.' : 'Setiap kasus hanya muncul sekali di semua file.' });
+  const los0 = R.filter(r => r.jr === 'RI' && r.los <= 0).length;
+  out.push({ s: los0 ? 'warn' : 'ok', j: los0 ? los0 + ' kasus rawat inap dengan LOS 0' : 'LOS rawat inap terisi', d: los0 ? 'Periksa tanggal masuk/pulang di E-Klaim.' : 'Semua kasus rawat inap punya lama rawat ≥ 1 hari.' });
+  const rs0 = R.filter(r => !r.rs).length, k0 = R.filter(r => !r.klaim).length;
+  out.push({ s: rs0 || k0 ? 'warn' : 'ok', j: rs0 || k0 ? 'Tarif kosong: ' + rs0 + ' tarif RS, ' + k0 + ' klaim' : 'Tarif RS dan klaim terisi', d: rs0 || k0 ? 'Kasus dengan tarif 0 membuat selisih tampak tidak wajar.' : 'Tidak ada kasus bertarif 0.' });
+  const ext = R.filter(r => r.rs && r.klaim && r.rs > r.klaim * 3).length;
+  out.push({ s: ext ? 'warn' : 'ok', j: ext ? ext + ' kasus tarif RS > 3× klaim' : 'Tidak ada selisih ekstrem', d: ext ? 'Layak ditinjau: kemungkinan koding kurang tepat, LOS panjang, atau tarif RS salah input. Lihat tab Per INA-CBG.' : 'Tidak ada kasus dengan tarif RS lebih dari 3 kali klaim.' });
+  const tanpaDpjp = R.filter(r => r.dpjp === '(tanpa DPJP)').length;
+  out.push({ s: tanpaDpjp ? 'warn' : 'ok', j: tanpaDpjp ? tanpaDpjp + ' kasus tanpa DPJP' : 'DPJP terisi', d: tanpaDpjp ? 'Kolom DPJP kosong di E-Klaim.' : 'Semua kasus punya DPJP.' });
+  const tanpaId = R.filter(r => !r.idrg).length;
+  out.push({ s: tanpaId ? 'warn' : 'ok', j: tanpaId ? tanpaId + ' kasus tanpa tarif iDRG' : 'Tarif iDRG terisi', d: tanpaId ? 'Kasus ini tidak ikut dalam perbandingan INA-CBG vs iDRG.' : 'Semua kasus punya tarif iDRG.' });
+  out.push({ s: C.cakupan.RJ === '-' || C.cakupan.RJ !== C.cakupan.RI ? 'warn' : 'ok', j: 'Cakupan bulan', d: 'Rawat inap ' + C.cakupan.RI + ' · Rawat jalan ' + C.cakupan.RJ + ' · ' + C.files.length + ' file.' });
+  return out;
+}
+const KOL_ALL = [['jr', 'Jenis'], ['tm', 'Masuk'], ['tk', 'Pulang'], ['kelas', 'Kelas'], ['cbg', 'INA-CBG'], ['desc', 'Deskripsi'], ['diag', 'Diagnosis utama'], ['los', 'LOS'], ['st', 'Cara pulang'], ['umur', 'Umur'], ['dpjp', 'DPJP'], ['rs', 'Tarif RS'], ['klaim', 'Klaim'], ['sel', 'Selisih'], ['idrg', 'iDRG'], ['file', 'File']];
+function renderLengkapC(rows){
+  const L = rows.slice().sort((a, b) => a.tk.localeCompare(b.tk)), max = 800;
+  $('#cLkSub').textContent = ang(L.length) + ' kasus pada saringan ini' + (L.length > max ? ' (ditampilkan ' + max + ' pertama; unduh CSV untuk semuanya)' : '') + '. Tanpa identitas pasien.';
+  const val = (r, k) => k === 'sel' ? r.klaim - r.rs : k === 'st' ? (PULANG[r.st] || r.st) : r[k];
+  $('#cTblAll').innerHTML = '<thead><tr>' + KOL_ALL.map(([, l]) => '<th' + (['los', 'umur', 'rs', 'klaim', 'sel', 'idrg'].includes(KOL_ALL.find(x => x[1] === l)[0]) ? ' class="n"' : '') + '>' + l + '</th>').join('') + '</tr></thead><tbody>' +
+    L.slice(0, max).map(r => '<tr>' + KOL_ALL.map(([k]) => { const v = val(r, k); return typeof v === 'number' ? '<td class="n' + (k === 'sel' ? ' ' + selKls(v) : '') + '">' + ang(v) + '</td>' : '<td>' + esc(v) + '</td>'; }).join('') + '</tr>').join('') + '</tbody>';
+  $('#cCsvAll').onclick = () => unduhCsv('Casemix ' + ymLabel(S.c.dari) + ' - ' + ymLabel(S.c.sampai) + '.csv', [KOL_ALL.map(x => x[1])].concat(L.map(r => KOL_ALL.map(([k]) => val(r, k)))));
+}
+function detailCbg(enc){
+  const k = decodeURIComponent(enc), rows = saringC().filter(r => r.cbg === k), A = agregatC(rows), yms = bulanC();
+  const bl = yms.map(ym => agregatC(rows.filter(r => r.ym === ym)));
+  const dp = grupC(rows, r => r.dpjp).sort((a, b) => b.n - a.n);
+  const kt = {}; rows.forEach(r => Object.entries(r.komp).forEach(([kk, v]) => kt[kk] = (kt[kk] || 0) + v));
+  let h = '<div class="kpis">' + kpiCasemix(A, true) + '</div>';
+  h += '<div class="facts"><div><span class="fl">ALOS</span><b>' + (A.nRI ? A.alos.toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' hari' : '-') + '</b></div><div><span class="fl">Kasus rugi</span><b>' + ang(A.rugiN) + ' (' + pct(A.n ? A.rugiN / A.n : 0, 0) + ')</b></div><div><span class="fl">Meninggal</span><b>' + ang(A.mati) + '</b></div><div><span class="fl">Tarif iDRG</span><b>' + rpS(A.idrg) + '</b></div></div>';
+  h += '<div class="cgrid"><div class="chart-card wide"><div class="cc-h"><h4>Per bulan</h4><span class="cc-sub">Tarif RS vs klaim</span></div><div class="legend"><span><i style="background:var(--c2)"></i>Tarif RS</span><span><i style="background:var(--c1)"></i>Klaim INA-CBG</span></div><div class="chart dw-c1"></div></div>';
+  h += '<div class="chart-card"><div class="cc-h"><h4>Komponen tarif RS rata-rata per kasus</h4><span class="cc-sub">Klaim rata-rata ' + rpS(A.n ? A.klaim / A.n : 0) + '</span></div><div class="hbars dw-k"></div></div>';
+  h += '<div class="chart-card"><div class="cc-h"><h4>Per DPJP</h4><span class="cc-sub">Klik untuk rincian dokter</span></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>DPJP</th><th class="n">Kasus</th><th class="n">ALOS</th><th class="n">Selisih</th></tr></thead><tbody>' + dp.map(x => '<tr class="rowpick" onclick="detailDpjp(\'' + encodeURIComponent(x.k) + '\')"><td>' + esc(x.k) + '</td><td class="n">' + ang(x.n) + '</td><td class="n">' + (x.nRI ? x.alos.toLocaleString('id-ID', { maximumFractionDigits: 1 }) : '-') + '</td><td class="n ' + selKls(x.sel) + '">' + ang(x.sel) + '</td></tr>').join('') + '</tbody></table></div></div></div>';
+  const el = bukaTab('cbg:' + k + '|' + JSON.stringify(S.c), 'INA-CBG', k + ' · ' + (rows[0] ? rows[0].desc : ''), ang(A.n) + ' kasus · ' + ymPanjang(S.c.dari) + ' – ' + ymPanjang(S.c.sampai), h);
+  barGroup(el.querySelector('.dw-c1'), yms.map(ymLabel), [{ n: 'Tarif RS', c: 'var(--c2)', v: bl.map(x => x.rs) }, { n: 'Klaim INA-CBG', c: 'var(--c1)', v: bl.map(x => x.klaim) }], { judul: i => ymPanjang(yms[i]) + ' · ' + ang(bl[i].n) + ' kasus', h: 250 });
+  batangH(el.querySelector('.dw-k'), Object.entries(kt).sort((a, b) => b[1] - a[1]).map(([kk, v]) => ({ n: (KOMP.find(x => x[0] === kk) || [kk, kk])[1], v: v / (A.n || 1), lbl: rpS(v / (A.n || 1), true) + ' <small>(' + pct(v / (A.rs || 1)) + ')</small>' })));
+}
+function detailDpjp(enc){
+  const k = decodeURIComponent(enc), rows = saringC({ abaikanDpjp: true }).filter(r => r.dpjp === k), A = agregatC(rows), yms = bulanC();
+  const bl = yms.map(ym => agregatC(rows.filter(r => r.ym === ym)));
+  const cg = grupC(rows, r => r.cbg).sort((a, b) => b.n - a.n);
+  let h = '<div class="kpis">' + kpiCasemix(A, true) + '</div>';
+  h += '<div class="facts"><div><span class="fl">Rawat inap / jalan</span><b>' + ang(A.nRI) + ' / ' + ang(A.nRJ) + '</b></div><div><span class="fl">ALOS</span><b>' + (A.nRI ? A.alos.toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' hari' : '-') + '</b></div><div><span class="fl">Kasus rugi</span><b>' + ang(A.rugiN) + ' (' + pct(A.n ? A.rugiN / A.n : 0, 0) + ')</b></div><div><span class="fl">Meninggal</span><b>' + ang(A.mati) + '</b></div></div>';
+  h += '<div class="chart-card"><div class="cc-h"><h4>Per bulan</h4><span class="cc-sub">Tarif RS vs klaim</span></div><div class="legend"><span><i style="background:var(--c2)"></i>Tarif RS</span><span><i style="background:var(--c1)"></i>Klaim INA-CBG</span></div><div class="chart dw-c1"></div></div>';
+  h += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>INA-CBG</th><th>Deskripsi</th><th class="n">Kasus</th><th class="n">ALOS</th><th class="n">Tarif RS</th><th class="n">Klaim</th><th class="n">Selisih</th></tr></thead><tbody>' + cg.map(x => '<tr class="rowpick" onclick="detailCbg(\'' + encodeURIComponent(x.k) + '\')"><td><b>' + esc(x.k) + '</b></td><td style="white-space:normal">' + esc(x.rows[0].desc) + '</td><td class="n">' + ang(x.n) + '</td><td class="n">' + (x.nRI ? x.alos.toLocaleString('id-ID', { maximumFractionDigits: 1 }) : '-') + '</td><td class="n">' + ang(x.rs) + '</td><td class="n">' + ang(x.klaim) + '</td><td class="n ' + selKls(x.sel) + '">' + ang(x.sel) + '</td></tr>').join('') + '</tbody></table></div>';
+  const el = bukaTab('dpjp:' + k + '|' + JSON.stringify(S.c), 'DPJP', k, ang(A.n) + ' kasus · ' + cg.length + ' INA-CBG · ' + ymPanjang(S.c.dari) + ' – ' + ymPanjang(S.c.sampai), h);
+  barGroup(el.querySelector('.dw-c1'), yms.map(ymLabel), [{ n: 'Tarif RS', c: 'var(--c2)', v: bl.map(x => x.rs) }, { n: 'Klaim INA-CBG', c: 'var(--c1)', v: bl.map(x => x.klaim) }], { judul: i => ymPanjang(yms[i]) + ' · ' + ang(bl[i].n) + ' kasus', h: 250 });
+}
+$('#cDari').onchange = e => { S.c.dari = e.target.value; renderCasemix(); };
+$('#cSampai').onchange = e => { S.c.sampai = e.target.value; renderCasemix(); };
+$('#cKelas').onchange = e => { S.c.kelas = e.target.value; renderCasemix(); };
+$('#cDpjp').onchange = e => { S.c.dpjp = e.target.value; renderCasemix(); };
+$('#cJr').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.c.jr = b.dataset.v; renderCasemix(); };
+$('#cReset').onclick = () => { Object.assign(S.c, { jr: 'all', kelas: 'all', dpjp: 'all', dari: S.cmx.yms[0], sampai: S.cmx.yms[S.cmx.yms.length - 1] }); $('#cKelas').value = 'all'; $('#cDpjp').value = 'all'; $('#cDari').value = S.c.dari; $('#cSampai').value = S.c.sampai; renderCasemix(); };
+$$('#cTabs button').forEach(b => b.onclick = () => { S.ctab = b.dataset.t; renderCasemix(); });
+$('#cCariCbg').oninput = e => { S.cari2.cbg = e.target.value; renderCasemix(); };
+$('#cCariDpjp').oninput = e => { S.cari2.dpjp = e.target.value; renderCasemix(); };
+const csvGrup = (kunci, kol, nama) => () => { const L = S['tbl_' + kunci] || []; unduhCsv(nama + ' ' + ymLabel(S.c.dari) + ' - ' + ymLabel(S.c.sampai) + '.csv', [kol.map(x => x[1]).concat(['Kasus', 'Rawat inap', 'ALOS', 'Tarif RS rata2', 'Klaim rata2', 'Total tarif RS', 'Total klaim', 'Selisih', 'Persen kasus rugi', 'Meninggal'])].concat(L.map(x => kol.map(([k]) => x[k]).concat([x.n, x.nRI, Math.round(x.alos * 100) / 100, Math.round(x.rsAvg), Math.round(x.klaimAvg), x.rs, x.klaim, x.sel, Math.round(x.pRugi * 1000) / 10, x.mati])))); };
+$('#cCsvCbg').onclick = csvGrup('cbg', [['k', 'INA-CBG'], ['desc', 'Deskripsi']], 'Casemix per INA-CBG');
+$('#cCsvDpjp').onclick = csvGrup('dpjp', [['k', 'DPJP']], 'Casemix per DPJP');
 
 /* ===================== Kontrol ===================== */
 $('#pullH').onclick = () => $('#pull').classList.toggle('closed');

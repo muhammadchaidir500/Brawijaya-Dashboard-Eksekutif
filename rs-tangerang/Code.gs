@@ -22,7 +22,8 @@
 
 const CONFIG = {
   FOLDER_UTAMA: '1Oi2V3r5Dd5btUQ8eqs-hVzelu42NP2Lc',   // folder "Dashboard RS Brawijaya Tangerang"
-  PEMILIK: 'ongkopriyanto22@gmail.com',
+  // Email yang boleh memakai tombol "Perbarui data sekarang"
+  PEMILIK: ['ongkopriyanto22@gmail.com', 'muhammadchaidir500@gmail.com'],
   NAMA_RS: 'RS Brawijaya Tangerang',
   JUDUL: 'Dashboard Direktur RS Brawijaya Tangerang',
 
@@ -142,7 +143,7 @@ function getKatalog() {
   out.sort(function (a, b) { return a.unit.localeCompare(b.unit) || (b.diubah > a.diubah ? 1 : -1); });
   return JSON.stringify({
     versi: VERSI, rs: CONFIG.NAMA_RS, judul: CONFIG.JUDUL, email: email,
-    pemilik: email === CONFIG.PEMILIK.toLowerCase(), dibaca: new Date().toISOString(), file: out
+    pemilik: pemilik_(email), dibaca: new Date().toISOString(), file: out
   });
 }
 
@@ -161,6 +162,20 @@ function getIsiFile(id) {
   throw new Error('Salinan ringkas file ini belum ada. Tunggu ±10 menit setelah file diunggah.');
 }
 
+/** Sama dengan getIsiFile tetapi tetap terkompresi (base64 dari .json.gz) agar file besar cepat sampai ke browser. */
+function getIsiFileGz(id) {
+  wajibIzin_();
+  const root = DriveApp.getFolderById(CONFIG.FOLDER_UTAMA);
+  const cacheIt = root.getFoldersByName(CONFIG.CACHE_NAMA);
+  if (!cacheIt.hasNext()) throw new Error('Salinan ringkas belum dibuat. Tunggu ±10 menit.');
+  const fs = cacheIt.next().getFilesByName(String(id) + '.json.gz');
+  while (fs.hasNext()) {
+    const f = fs.next();
+    if (!f.isTrashed()) return Utilities.base64Encode(f.getBlob().getBytes());
+  }
+  throw new Error('Salinan ringkas file ini belum ada. Tunggu ±10 menit setelah file diunggah.');
+}
+
 /** Tombol "Perbarui data sekarang" (hanya pemilik). */
 function perbaruiSekarang() {
   hanyaPemilik_();
@@ -174,10 +189,14 @@ function emailPengguna_() {
   try { return String(Session.getActiveUser().getEmail() || Session.getEffectiveUser().getEmail() || '').toLowerCase(); }
   catch (e) { return ''; }
 }
+function pemilik_(email) {
+  const list = [].concat(CONFIG.PEMILIK || []).map(function (x) { return String(x).trim().toLowerCase(); });
+  return !!email && list.indexOf(email) >= 0;
+}
 function diizinkan_(email) {
   const list = (CONFIG.EMAIL_DIIZINKAN || []).map(function (x) { return String(x).trim().toLowerCase(); }).filter(String);
   if (!list.length) return true;
-  return !!email && (list.indexOf(email) >= 0 || email === CONFIG.PEMILIK.toLowerCase());
+  return !!email && (list.indexOf(email) >= 0 || pemilik_(email));
 }
 function wajibIzin_() {
   const email = emailPengguna_();
@@ -185,7 +204,7 @@ function wajibIzin_() {
   return email;
 }
 function hanyaPemilik_() {
-  if (emailPengguna_() !== CONFIG.PEMILIK.toLowerCase()) throw new Error('Fitur ini hanya untuk pemilik dashboard (' + CONFIG.PEMILIK + ').');
+  if (!pemilik_(emailPengguna_())) throw new Error('Fitur ini hanya untuk pemilik dashboard (' + [].concat(CONFIG.PEMILIK).join(', ') + ').');
 }
 function aman_(s) { return String(s).replace(/[<>&"]/g, ''); }
 function halamanPesan_(judul, isi) {
@@ -221,7 +240,7 @@ function fileData_(f) {
   const mime = f.getMimeType();
   if (f.getName().charAt(0) === '_') return false;
   if (mime === SHEETS) return (f.getDescription() || '').indexOf(TANDA) !== 0; // versi konversi otomatis tidak dihitung dua kali
-  return SUMBER.indexOf(mime) >= 0;
+  return SUMBER.indexOf(mime) >= 0 || adalahTxt_(f);
 }
 
 /* ===================== Konversi & salinan ringkas (berjalan tiap 10 menit) ===================== */
@@ -326,6 +345,7 @@ function buatCacheFolder_(fd, cache, idx, mulai) {
 
 function bacaNilai_(f, filesSefolder, cache) {
   const mime = f.getMimeType();
+  if (adalahTxt_(f)) return bacaTxt_(f);
   if (mime === 'text/csv') {
     const teks = f.getBlob().getDataAsString('UTF-8').replace(/^﻿/, '');
     const baris1 = teks.split(/\r?\n/)[0] || '';
@@ -338,6 +358,64 @@ function bacaNilai_(f, filesSefolder, cache) {
   const tmpId = konversi_(f, cache.getId(), '_sementara_' + f.getId(), 'sementara');
   try { return bacaSpreadsheet_(tmpId); }
   finally { DriveApp.getFileById(tmpId).setTrashed(true); }
+}
+
+/* ---------- File teks (.TXT), termasuk export E-Klaim INA-CBG/iDRG ---------- */
+function adalahTxt_(f) { return /\.txt$/i.test(f.getName()) && /^text\//.test(f.getMimeType()); }
+
+// Kolom E-Klaim yang disimpan. Identitas pasien (NAMA_PASIEN, NOKARTU, BIRTH_DATE, MRN, SEP, C1–C4)
+// TIDAK disimpan. MRN diganti PASIEN_KODE: kode acak satu arah (berkunci rahasia di Properti skrip)
+// yang hanya dipakai untuk menghitung rawat ulang, tidak bisa dikembalikan ke nomor RM.
+const EKLAIM_SIMPAN = ['KELAS_RS', 'KELAS_RAWAT', 'KODE_TARIF', 'PTD', 'ADMISSION_DATE', 'DISCHARGE_DATE', 'BIRTH_WEIGHT', 'SEX',
+  'DISCHARGE_STATUS', 'DIAGLIST', 'PROCLIST', 'ADL1', 'ADL2', 'INACBG', 'SUBACUTE', 'CHRONIC', 'SP', 'SR', 'SI', 'SD', 'DESKRIPSI_INACBG',
+  'TARIF_INACBG', 'TARIF_SUBACUTE', 'TARIF_CHRONIC', 'TARIF_SP', 'TARIF_SR', 'TARIF_SI', 'TARIF_SD', 'TOTAL_TARIF', 'TARIF_RS',
+  'TARIF_POLI_EKS', 'LOS', 'ICU_INDIKATOR', 'ICU_LOS', 'VENT_HOUR', 'UMUR_TAHUN', 'DPJP', 'PAYOR_ID', 'CODER_ID',
+  'PROSEDUR_NON_BEDAH', 'PROSEDUR_BEDAH', 'KONSULTASI', 'TENAGA_AHLI', 'KEPERAWATAN', 'PENUNJANG', 'RADIOLOGI', 'LABORATORIUM',
+  'PELAYANAN_DARAH', 'REHABILITASI', 'KAMAR_AKOMODASI', 'RAWAT_INTENSIF', 'OBAT', 'ALKES', 'BMHP', 'SEWA_ALAT', 'OBAT_KRONIS', 'OBAT_KEMO',
+  'IDRG_DIAG_LISTS', 'IDRG_PROC_LISTS', 'IDRG_MDC_NUMBER', 'IDRG_MDC_DESCRIPTION', 'IDRG_DRG_CODE', 'IDRG_DRG_DESCRIPTION',
+  'IDRG_COST_WEIGHT', 'IDRG_TOTAL_COST_WEIGHT', 'IDRG_TOTAL_TARIF'];
+const EKLAIM_ANGKA = /^(TARIF_|TOTAL_TARIF|LOS|ICU_|VENT_|UMUR_|BIRTH_WEIGHT|PROSEDUR_|KONSULTASI|TENAGA_AHLI|KEPERAWATAN|PENUNJANG|RADIOLOGI|LABORATORIUM|PELAYANAN_DARAH|REHABILITASI|KAMAR_|RAWAT_INTENSIF|OBAT|ALKES|BMHP|SEWA_ALAT|IDRG_.*(WEIGHT|TARIF))/;
+
+function kunciRahasia_() {
+  const p = PropertiesService.getScriptProperties();
+  let k = p.getProperty('KUNCI_KODE_PASIEN');
+  if (!k) { k = Utilities.getUuid() + Utilities.getUuid(); p.setProperty('KUNCI_KODE_PASIEN', k); }
+  return k;
+}
+function kodePasien_(mrn, kunci) {
+  if (!mrn) return '';
+  const b = Utilities.computeHmacSha256Signature(String(mrn).trim(), kunci);
+  return b.slice(0, 6).map(function (x) { return ('0' + (x & 255).toString(16)).slice(-2); }).join('');
+}
+function tglIso_(v) {
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(String(v || '').trim());
+  return m ? m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2) : String(v || '');
+}
+function bacaTxt_(f) {
+  const teks = f.getBlob().getDataAsString('UTF-8').replace(/^\uFEFF/, '');
+  const baris = teks.split(/\r?\n/).filter(function (l) { return l.replace(/\s/g, '') !== ''; });
+  if (!baris.length) return [{ nama: 'Data', baris: [] }];
+  const H = baris[0].split('\t').map(function (x) { return String(x).trim().toUpperCase(); });
+  if (H.indexOf('INACBG') < 0 || H.indexOf('TARIF_RS') < 0) {
+    // Bukan E-Klaim: simpan apa adanya (dipisah TAB bila ada, selain itu koma)
+    const pem = baris[0].indexOf('\t') >= 0 ? '\t' : ',';
+    return [{ nama: 'Data', baris: baris.map(function (l) { return l.split(pem); }) }];
+  }
+  const kunci = kunciRahasia_(), iMrn = H.indexOf('MRN');
+  const pakai = EKLAIM_SIMPAN.map(function (k) { return H.indexOf(k); });
+  const out = [EKLAIM_SIMPAN.concat(['PASIEN_KODE'])];
+  for (let r = 1; r < baris.length; r++) {
+    const row = baris[r].split('\t');
+    out.push(pakai.map(function (i, j) {
+      const k = EKLAIM_SIMPAN[j];
+      let v = i < 0 || row[i] == null ? '' : String(row[i]).trim();
+      if (k === 'CODER_ID') return v.split(';')[0];
+      if (k === 'ADMISSION_DATE' || k === 'DISCHARGE_DATE') return tglIso_(v);
+      if (EKLAIM_ANGKA.test(k)) { const n = Number(v.replace(',', '.')); return isFinite(n) && v !== '' ? n : (v === '' ? 0 : v); }
+      return v === 'None' || v === '-' ? '' : v;
+    }).concat([kodePasien_(iMrn >= 0 ? row[iMrn] : '', kunci)]));
+  }
+  return [{ nama: 'E-Klaim', baris: out }];
 }
 
 function bacaSpreadsheet_(id) {
